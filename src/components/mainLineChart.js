@@ -1,17 +1,24 @@
+// This component is the line chart for the floating line chart panel.
+
+// Main import
 import React, {useState} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import Switch from '@material-ui/core/Switch';
+import styled from 'styled-components';
 
+// d3 wrapper library import
 import {
   LineChart, Line, XAxis, YAxis, ReferenceArea, 
   Tooltip, Label, ResponsiveContainer, Legend
 } from 'recharts';
 
-import Switch from '@material-ui/core/Switch';
-
-import styled from 'styled-components';
+// Color import
 import { colors } from '../config';
+
+// Redux action
 import { setVariableParams } from '../actions';
 
+// Scoped CSS
 const ChartContainer = styled.span`
     span {
         color:white;
@@ -48,27 +55,10 @@ const ChartTitle = styled.h3`
     color:white;
 `
 
-// const LegendList = styled.ul`
-//     list-style:none;
-//     margin-block-start: 0;
-//     margin-block-end: 0;
-//     padding-inline-start: 0;
-//     text-align:center;
-// `
-
-// const LegendItem = styled.li`
-//     color: ${props => props.color};
-//     font-family:'Lato', sans-serif;
-//     line-height:1.5;
-//     text-decoration: ${props => props.active ? 'underline' : 'none'};
-//     display:inline;
-//     margin-right:10px;
-
-// `
-
-
+// Legible month names
 const monthNames = ["Jan","Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+// Format functions for million, thousand, and date
 const millionFormatter = val => { return `${val/1000000}M` };
 const thousandFormatter = val => { return `${val/1000}K` };
 const dateFormatter = val => { 
@@ -76,57 +66,15 @@ const dateFormatter = val => {
     return `${monthNames[tempDate]}`
 };
 
+// Axis tick formatter 
 const CustomTick = props => {
     return <text {...props}>{props.labelFormatter(props.payload.value)}</text>
 };
 
 
-// const stripLeadingZero = ( str ) => str[0] !== '0' ? str : str.slice(1,);
-
-// const getStartDate = (range, index, data) => {
-//     if (range === null) {
-//         try {
-//             if ((data.slice(0,1)[0].date).indexOf('-') === -1) {
-//                 return data.slice(0,1)[0].date
-//             } else {
-//                 let tempDate = data.slice(0,1)[0].date.split('-');
-//                 return `${stripLeadingZero(tempDate[1])}/${stripLeadingZero(tempDate[2])}/${tempDate[0].slice(0,2)}`
-//             }            
-//         } catch {
-//             return null
-//         }
-//     } else {
-//         try {
-//             if ((data[index-range].date).indexOf('-') === -1) {
-//                 return data[index-range].date
-//             } else {
-//                 let tempDate = data[index-range].date.split('-');
-//                 return `${stripLeadingZero(tempDate[1])}/${stripLeadingZero(tempDate[2])}/${tempDate[0].slice(0,2)}`
-//             }
-//         } catch {
-//             return null
-//         }
-//     }
-// }
-
-// const getEndDate = (index, data) => {
-//     try {
-//         if ((data[index].date).indexOf('-') === -1) {
-//             return data[index].date
-//         } else {
-//             let tempDate = data[index].date.split('-');
-//             return `${stripLeadingZero(tempDate[1])}/${stripLeadingZero(tempDate[2])}/${tempDate[0].slice(0,2)}`
-//         }
-//     } catch {
-//         return null
-//     }
-// }
-
 const getDateRange = ({startDate, endDate}) => {
     let dateArray = [];
-
     let years = [];
-
     if (startDate.getUTCFullYear() === endDate.getUTCFullYear()) {
         years = [endDate.getUTCFullYear()]
     } else {
@@ -134,17 +82,14 @@ const getDateRange = ({startDate, endDate}) => {
             years.push(i)
         }
     }
-
     for (let i=0; i<years.length; i++){
         let yearStr = ''+years[i]
         let n;
-    
         if (years[i] === 2020) {
             n = 2
         } else {
             n = 1
         }
-
         let dateString = `${yearStr}-${n<10?0:''}${n}-01`
         while (n < 13) {
             dateString = `${yearStr}-${n<10?0:''}${n}-01`
@@ -185,7 +130,7 @@ const CustomTooltip = props => {
     return null;
 };
 
-const MainLineChart = () => {
+function MainLineChart(){
     const chartData = useSelector(state => state.chartData);
     const dataParams = useSelector(state => state.dataParams);
     const currentVariable = useSelector(state => state.currentVariable);
@@ -364,20 +309,6 @@ const MainLineChart = () => {
                     {selectionKeys.length < 2 && <Line type="monotone" yAxisId="left" dataKey={selectionKeys.length > 0 ? selectionKeys[0] + " Total Cases" : "sum"} name="Total Cases" stroke={colors.lightgray} dot={false} isAnimationActive={false} /> }
                     {selectionKeys.length < 2 && <Line type="monotone" yAxisId="right" dataKey={selectionKeys.length > 0 ? selectionKeys[0] + " Daily Count": "count"} name="7-Day Average New Cases" stroke={colors.yellow} dot={false} isAnimationActive={false} /> }
                     
-                    {/* {selectionKeys.length !== 0 && 
-                        selectionKeys.map((key,index) => { 
-                            return <Line 
-                                type="monotone" 
-                                yAxisId="left" 
-                                dataKey={key + ' Total Cases'} 
-                                name={key + ' Total Cases'} 
-                                stroke={colors.pairedColors.sum[index]} 
-                                dot={false} 
-                                isAnimationActive={false}  
-                                strokeOpacity={strokeOpacities.length === 0 || strokeOpacities.includes(key + ' Total Cases') ? 1 : 0.25}
-                            />}
-                        )
-                    } */}
                     {selectionKeys.length > 1 && 
                             <Line 
                                 type='monotone'
@@ -426,5 +357,3 @@ const MainLineChart = () => {
 }
 
 export default MainLineChart
-
-// dataParams.nIndex-(dataParams.nRange||dataParams.nIndex)

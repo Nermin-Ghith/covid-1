@@ -1,15 +1,19 @@
+// Main Import
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-
-
-import { ContentContainer, Gutter } from '../../styled_components';
-
 import Grid from '@material-ui/core/Grid';
 
+// Pre-Styled Components
+import { ContentContainer, Gutter } from '../../styled_components';
+
+// Header/footer components
 import { StaticNavbar, Footer } from '../../components';
+
+// Colors
 import { colors } from '../../config';
 
+// scoped CSS
 const AboutPage = styled.div`
     background:white;
 `
@@ -32,6 +36,8 @@ const BioSection = styled.div`
     }
 `
 
+// list of people, link, photo, affiliation and title
+// will be read in below for page
 const leadershipInfo = [
     {
         name: 'Marynia Kolak, MS, MFA, PhD',
@@ -279,24 +285,25 @@ const contributorsInfo = [
 ]
 
 
-
-const formatBio = (person) => 
+// helper component to format bio pics
+const FormattedBio = (props) => 
     <Grid item xs={12} md={4}>
-        <img src={person.img} alt={`${person.name} photo`} />
+        <img src={props.person.img} alt={`${props.person.name} photo`} />
         <p>
-            {person.link ? 
-                <a href={person.link} target="noopener noreferrer">{person.name}</a>
+            {props.person.link ? 
+                <a href={props.person.link} target="noopener noreferrer">{props.person.name}</a>
                 :
-                person.name
+                props.person.name
             }
-            {person.affiliation && ` ${person.affiliation}`}
+            {props.person.affiliation && ` ${props.person.affiliation}`}
         </p>
         <p>
-            {person.title}
+            {props.person.title}
         </p>
     </Grid>
 
-const about = () => {
+// main page function
+function About(){
     return (
        <AboutPage>
            <StaticNavbar/>
@@ -322,27 +329,27 @@ const about = () => {
                 <BioSection>
                     <h3>Leadership</h3>
                     <Grid container spacing={1} justify="center">
-                        {leadershipInfo.map(person => formatBio(person))}
+                        {leadershipInfo.map(person => <FormattedBio person={person}/>)}
                     </Grid>
                     <Gutter h={60}/>
                     <h3>Core Development Team</h3>
                     <Grid container spacing={1} justify="center">
-                        {coreTeamInfo.map(person => formatBio(person))}
+                        {coreTeamInfo.map(person => <FormattedBio person={person}/>)}
                     </Grid>
                     <Gutter h={60}/>
                     <h3>Coalition Design &amp; Communications Team</h3>
                     <Grid container spacing={1} justify="center">
-                        {coalitionDesignInfo.map(person => formatBio(person))}
+                        {coalitionDesignInfo.map(person => <FormattedBio person={person}/>)}
                     </Grid>
                     <Gutter h={60}/>
                     <h3>Coalition Partners</h3>
                     <Grid container spacing={1} justify="center">
-                        {coalitionPartnersInfo.map(person => formatBio(person))}
+                        {coalitionPartnersInfo.map(person => <FormattedBio person={person}/>)}
                     </Grid>
                     <Gutter h={60}/>
                     <h3>Contributors</h3>
                     <Grid container spacing={1} justify="center">
-                        {contributorsInfo.map(person => formatBio(person))}
+                        {contributorsInfo.map(person => <FormattedBio person={person}/>)}
                     </Grid>
                 </BioSection>
            </ContentContainer>
@@ -351,4 +358,4 @@ const about = () => {
     );
 }
  
-export default about;
+export default About;

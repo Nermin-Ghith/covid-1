@@ -251,6 +251,7 @@ const InfoBox = () => {
                     </Select>
                 </PagesDropDown>
             <BodyContainer>
+                {/* Renders content from wiki entry, or tutorial */}
                 {pages[currArticle]['content']}
                 {(currArticle === "getting-started") && 
                     tutorialInfo.map(tutorial => 

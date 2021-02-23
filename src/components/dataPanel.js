@@ -418,8 +418,9 @@ const DataPanel = () => {
     return returnStr;
   }
 
-  
+  // Return data panel
   return (
+    // "Open" if open, otherwise off-screen
     <DataPanelContainer className={panelState.info ? 'open' : ''} id="data-panel"  otherPanels={panelState.variables} dataLength={selectionKeys.length}>
       {properties &&  
       <ExpandSelect>

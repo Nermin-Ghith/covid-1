@@ -1,14 +1,23 @@
+// Main Import
 import React from 'react';
-import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
+
+// Pre-styled components
 import { ContentContainer, Gutter } from '../../styled_components';
+
+// Header/footer components
 import { StaticNavbar, Footer } from '../';
+
+// Colors
 import { colors } from '../../config';
 
+
+// scoped CSS
 const ApiPage = styled.div`
-    background:white;
+    background:${colors.white};
 `
 
+// code styling
 const CodeBold = styled.code`
     font-weight:bold;
 `
@@ -23,9 +32,8 @@ const CodeBlock = styled.div`
     padding:20px;
     background:${colors.lightgray}55;
 `
-
-const Insights = () => {
-
+// API page function
+function API(){
     return (
        <ApiPage>
            <StaticNavbar/>
@@ -147,4 +155,4 @@ const Insights = () => {
     );
 }
  
-export default Insights;
+export default API;

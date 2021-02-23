@@ -10,10 +10,12 @@ import Switch from '@material-ui/core/Switch';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 
+// Config and actions
 import { colors } from '../config';
 import * as SVG from '../config/svg';
 import { setPanelState } from '../actions';
 
+// Scoped CSS
 const MenuContainer = styled(Paper)`
     position:fixed;
     left: ${props=>props.x}px;
@@ -61,6 +63,9 @@ const Contextbutton = styled(Button)`
     }
 `
 
+// Recursive function to find top level parent node
+// Checks to see if parent node of click is the context menu (keep it open)
+// or anywhere else (close the context menu)
 const recurseParentNode = (element) => {
     if (element.parentNode === null || element.parentNode.id === "contextMenu" || element.parentNode.id === "mainContainer") {
         return element.parentNode?.id
@@ -68,12 +73,19 @@ const recurseParentNode = (element) => {
         return recurseParentNode(element.parentNode)
     }
 }
+
+// Context menu component (WIP)
 const ContextMenu = () => {
+    // Redux action wrapper
     const dispatch = useDispatch();
 
+    // State open/close
     const panelState = useSelector(state => state.panelState);
+
+    // XY position of menu
     const {x, y} = useSelector(state => state.panelState.contextPos);
 
+    // On open, add listeners to close on (basically) any interaction with map or interface
     useEffect(() => {
         if (panelState.context) {
             const listener = (e) => {
@@ -101,6 +113,7 @@ const ContextMenu = () => {
         }
     }, [panelState.context])
     
+    // conditionally returns menu
     return panelState.context ? 
         <MenuContainer x={x} y={y} elevation={8} id="contextMenu">
             <h2>Toggle Panels</h2>     

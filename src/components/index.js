@@ -1,4 +1,4 @@
-
+// components
 import BottomPanel from './bottomPanel';
 import ContextMenu from './contextMenu';
 import DataPanel from './dataPanel';
@@ -22,7 +22,6 @@ import StaticNavbar from './staticNavbar';
 import Tooltip from './tooltip';
 import TopPanel from './topPanel';
 import Geocoder from './geocoder';
-
 
 // pages
 import About from './Pages/About';

@@ -1,17 +1,28 @@
+// React import
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
+
+// Redux store, provider, and reducer
 import { Provider } from 'react-redux';
-import './index.css';
-import WebFont from 'webfontloader';
-import registerServiceWorker from "./registerServiceWorker";
 import { createStore } from 'redux';
 import rootReducer from './reducers';
+
+// State persistance
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
 import { PersistGate } from 'redux-persist/integration/react';
-import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2'
+import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
+// App, CSS, and webfont stuff
+import App from './App';
+import './index.css';
+import WebFont from 'webfontloader';
+
+// Service worker for PWA
+import registerServiceWorker from "./registerServiceWorker";
+
+// State persistence settings
+// (currently not used)
 const persistConfig = {
   key: 'root',
   storage,
@@ -20,13 +31,15 @@ const persistConfig = {
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
+
+// Store, uncomment second line to enable redux dev tools
 const store = createStore(
   persistedReducer
   // ,window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
 const persistor = persistStore(store)
 
-
+// Load Playfair and Lato fonts
 WebFont.load({
   google: {
     families: ['Lato:300,400,700,900', 'Playfair Display:ital', 'sans-serif']

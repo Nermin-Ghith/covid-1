@@ -1,10 +1,18 @@
+// Main imports
 import React from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
+
+// Pre-styled components
 import { ContentContainer, Gutter } from '../../styled_components';
+
+// Header/footer components
 import { StaticNavbar, Footer } from '../';
+
+// Colors
 import { colors } from '../../config';
 
+// Scoped CSS
 const ChoroplethPage = styled.div`
     background:white;
     min-height:100vh;
@@ -22,8 +30,8 @@ const TutorialBox = styled.div`
     }
 `
 
-const Choropleth = () => {
-
+// Choropleth explainer page
+function Choropleth(){
     return (
        <ChoroplethPage>
            <StaticNavbar/>

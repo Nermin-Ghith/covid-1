@@ -1,9 +1,17 @@
+// This is a dumb (higher-order) component for formatting the legend 
+// based on current bins and colors
+
+// Main import
 import React from 'react';
 import Grid from '@material-ui/core/Grid';
 import styled from 'styled-components';
+
+// Component and color import
 import BinsList from './binsList';
 import { colors } from '../config';
 
+// scoped CSS
+// Container
 const BottomPanel = styled.div`
     position: fixed;
     bottom:0;
@@ -71,6 +79,7 @@ const LegendTitle = styled.h3`
     color:white;
 `
 
+// Numbers or names of bins
 const BinLabels = styled.div`
     width:100%;
     display: flex;
@@ -95,6 +104,8 @@ const BinLabels = styled.div`
         padding-bottom:25px;
     }
 `
+
+// Color bars
 const BinBars = styled.div`
     width:100%;
     display: flex;
@@ -112,9 +123,7 @@ const BinBars = styled.div`
     }
 `
 
-
-const Legend =  (props) => {
-    
+function Legend(props){
     return (
         <BottomPanel id="bottomPanel">
             <LegendContainer>
@@ -125,6 +134,7 @@ const Legend =  (props) => {
                         </LegendTitle>
                     </Grid>
                     <Grid item xs={12}>
+                        {/* Loop through bins and draw bin color bars and labels */}
                         {props.colorScale !== undefined &&  
                             <span>
                                 <BinBars firstBinZero={`${props.colorScale[0]}` === `240,240,240` && props.fixedScale === null}>

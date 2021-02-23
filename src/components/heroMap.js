@@ -1,14 +1,18 @@
+// This component is the hero map on the splash page
+
 // general imports, state
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
-// deck GL and helper function import
+// deck GL, layer, and bounds function import
 import DeckGL from '@deck.gl/react';
 import { PolygonLayer } from '@deck.gl/layers';
 import { fitBounds } from '@math.gl/web-mercator';
 
+// CSV util
 import { getCSV } from '../utils';
 
+// Scoped CSS
 const MapContainer = styled.div`
     width:600px;
     height:400px;
@@ -31,6 +35,7 @@ const MapContainer = styled.div`
     }
 
 `
+
 // US bounds
 const bounds = fitBounds({
     width: 600,
@@ -38,6 +43,7 @@ const bounds = fitBounds({
     bounds: [[-130.14, 53.96],[-67.12, 19]]
 })
 
+// Color scale
 const colorscale = [
     [255,255,204,200],
     [255,237,160,200],
@@ -49,6 +55,9 @@ const colorscale = [
     [177,0,38,200],
 ]
 
+// Pure function, compares value to bins and returns color
+// If no matches, returns max bin.
+// This is the same as d3's scaleInterval, but should be faster
 const getColor = (val, bins, colors) => {
     for (let i = 0; i < bins.length; i++) {
         if (val < bins[i]) return colors[i]
@@ -57,16 +66,23 @@ const getColor = (val, bins, colors) => {
 }
 
 export default function HeroMap(){
-
+    // main data state
     const [geoData, setGeoData] = useState([]);
+
+    // dates to loop through
     const [dateList, setDateList] = useState([]);
+
+    // bins, based on octiles of most recent date
     const [dataBins, setDataBins] = useState([]);
+
+    // current animation date and 1 week prior
     const [currDate, setCurrDate] = useState({
         current:'2020-01-30',
         previous:'2020-01-23'
     });
-    const [intervalFn, setIntervalFn] = useState(null);
 
+    // interval ID for animation function
+    const [intervalFn, setIntervalFn] = useState(null);
 
     // map view location
     const fixedViewstate = {
@@ -77,13 +93,17 @@ export default function HeroMap(){
         pitch:45
     }
 
+    // On mount, loads in data
     useEffect(() => {
+        // fetches usa facts county geojson
         const getGeoData = async () => {
             const data = await fetch(`${process.env.PUBLIC_URL}/geojson/county_usfacts.geojson`)
                 .then(r => r.json())
                 .then(r => {
                     let returnArray = [];
-
+                    // cleans return for polygon layer
+                    // Deck.gl Polygon layer requires closed, single polygons,
+                    // so secondary loop handles multipoligon features (eg. islands)
                     for ( let i = 0; i < r.features.length; i++ ) {
                         for ( let n = 0; n < r.features[i].geometry.coordinates.length; n++) {
                             returnArray.push({
@@ -93,26 +113,24 @@ export default function HeroMap(){
                             })
                         }
                     }
-
+                    // return cleaned data
                     return returnArray
                 })
             return data
         }
 
+        // transform array into an Object with FIPS as keys
         const formatData = async (data) => {
             let returnObj = {}
-
             for (let i = 0; i < data.length; i++) {
                 returnObj[data[i].countyFIPS] = data[i]
             }
-
             return returnObj;
         }
 
+        // search columns to find dates, then return the rest of array as dates
         const getDates = async (data) => {
-
             const keys = Object.keys(data);
-
             for (let i = 0; i < keys.length; i++) {
                 if (!Number.isNaN(Date.parse(keys[i]))) {
                     return(keys.slice(i,))
@@ -120,24 +138,26 @@ export default function HeroMap(){
             }
         }
 
+        // gets 8 percentile bins from data
         const getBins = async (data, dates, geoData) => {
             const finalDate = dates.slice(-1,)[0];
             const weekBefore = dates.slice(-7,)[0];
-            let populations = {};
             const values = Object.values(data)
 
+            // get population values
+            let populations = {};
             for (let i=0; i<geoData.length; i++){
                 populations[geoData[i].GEOID] = geoData[i].population;
             };
-
+            // sort values in an array
             const valArray = values.map(d => (((d[finalDate]-d[weekBefore])/7)/populations[d.countyFIPS])*100000);
-
+            // sort array
             valArray.sort(function(a, b) {
                 return a - b;
             });
 
+            // get octile rank values
             let quantileArray = []
-
             for (let i=0; i<8; i++){
                 quantileArray.push(
                     valArray[
@@ -148,9 +168,11 @@ export default function HeroMap(){
                 )
             }
             
+            // return bins
             return quantileArray;
         };
 
+        // simple data join, hard coded to GEOID
         const joinData = async (geoData, data) => {
             for (let i=0; i<geoData.length; i++) {
                 geoData[i]['data'] = data[geoData[i].GEOID]
@@ -158,6 +180,7 @@ export default function HeroMap(){
             return geoData
         }
 
+        // Fetch and handle data, then load into component state
         const handleInitialDataLoad = async () => {
             const data = await getCSV(`${process.env.PUBLIC_URL}/csv/covid_confirmed_usafacts.csv`);
             const dates = await getDates(data[0]);
@@ -171,9 +194,11 @@ export default function HeroMap(){
             setDateList(dates);
         }
 
+        // initiate data load
         handleInitialDataLoad()
     },[])
 
+    // After loading in dates, start the interval timer (8 ticks per second)
     useEffect(() => {
         clearInterval(intervalFn);
         setIntervalFn(setInterval(() => setCurrDate(prev => {
@@ -192,6 +217,9 @@ export default function HeroMap(){
         ), 125));
     }, [dateList])
 
+    // deck gl polygon layer, based on geoData component state
+    // fill color based on bins
+    // elevation relative to top bin
     const layer = new PolygonLayer({
         id: 'home choropleth',
         data: geoData,

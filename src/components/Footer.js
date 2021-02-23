@@ -1,12 +1,16 @@
+// This component is the main footer component for static-styled pages.
+
+// Main import and UI elements
 import React from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
 
+// Colors import 
 import { colors } from '../config';
 
-
+// Scoped CSS
 const FooterContainer = styled.footer`
     width:100%;
     background: ${colors.teal};
@@ -45,6 +49,7 @@ const FooterContainer = styled.footer`
         margin:20px 0;
     }
 `
+
 const FooterContent = styled.div`
     width:100%;
     max-width:1140px;
@@ -111,7 +116,8 @@ const SignupForm = styled.div`
     }
 `
 
-const Footer = ( props ) => {
+// Footer compoment function. Props passed whether or not it should display email signup
+function Footer( props ){
     return (
         <FooterContainer>
             <FooterContent>
@@ -123,8 +129,6 @@ const Footer = ( props ) => {
                         <form action="https://github.us10.list-manage.com/subscribe/post?u=5ed730d26727290870ec65153&amp;id=74f209d5ed" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate form-inline vertical-center" target="_blank" novalidate="">
                             <label class="sr-only" for="inlineFormInputGroupUsername2">Email</label>                            
                             <Grid container spacing={1}>
-                                                                
-                                {/* <input type="email" class="form-control EnterEmailBox" name="b_5ed730d26727290870ec65153_74f209d5ed" placeholder="Enter email address" /> */}
                                 <Grid item xs={8} sm={10}>
                                     <TextField id="outlined-basic" variant="outlined" type="email" class="form-control EnterEmailBox" name="b_5ed730d26727290870ec65153_74f209d5ed" placeholder="Enter email address"/>
                                 </Grid>

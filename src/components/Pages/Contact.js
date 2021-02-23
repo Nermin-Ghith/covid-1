@@ -1,12 +1,19 @@
+// Main Import
 import React from 'react';
 import styled from 'styled-components';
+
+// Pre-styled components
 import { ContentContainer, Gutter } from '../../styled_components';
+
+// Header and footer components
 import { StaticNavbar, Footer } from '../';
 
+// Scoped CSS
 const ContactPage = styled.div`
     background:white;
 `
 
+// List of press items to be loaded into list
 const pressInfo = [
     {
         'name': 'NPR - All Things Considered:',
@@ -130,7 +137,16 @@ const pressInfo = [
     }
 ]
 
-const contact = () => {
+// Helper component to format press entries
+const PressItem = (props) => 
+    <p>
+        <b>{props.press.name} </b>
+        <a href={props.press.link} target="_blank" rel="noopener noreferrer">{props.press.text}</a>
+        {props.press.date}
+        <br/><br/>
+    </p>
+
+function Contact(){
     return (
        <ContactPage>
            <StaticNavbar/>
@@ -159,18 +175,11 @@ const contact = () => {
                 <Gutter h={40}/>
                 <h2>MEDIA COVERAGE</h2>
                 <hr/>
-                {pressInfo.map(press => 
-                    <p>
-                        <b>{press.name} </b>
-                        <a href={press.link} target="_blank" rel="noopener noreferrer">{press.text}</a>
-                        {press.date}
-                        <br/><br/>
-                    </p>
-                )}
+                {pressInfo.map(press => <PressItem press={press}/>)}
            </ContentContainer>
            <Footer/>
        </ContactPage>
     );
 }
  
-export default contact;
+export default Contact;
