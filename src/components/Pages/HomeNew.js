@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import Grid from '@material-ui/core/Grid';
 
-import { StaticNavbar, Geocoder, HeroMap, Footer } from '../../components';
+import { StaticNavbar, Geocoder, HeroMap, Footer, FastTrackInsights } from '../../components';
 import { colors, MAPBOX_ACCESS_TOKEN } from '../../config';
 import { Gutter } from '../../styled_components';
 
@@ -52,6 +52,7 @@ const HomePageContent = styled.div`
 const Hero = styled.div`
     width:100%;
     max-width:1140px;
+    position:relative;
     text-align:center;
     color: ${colors.lightgray};
     margin:0 auto;
@@ -265,8 +266,8 @@ const CenteredGrid = styled(Grid)`
 
 const MapWrapper = styled.div`
     position:absolute;
-    top:175px;
-    left:50%;
+    top:75px;
+    right:15px;
     z-index:0;
 `
 
@@ -331,11 +332,11 @@ function Home(){
                         </CenteredGrid>
                     </Grid>
                     
-                </Hero>
                 <MapWrapper>
                     <HeroMap/>
                 </MapWrapper>
-                <hr/>
+                </Hero>
+                <FastTrackInsights />
                 <Features>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>

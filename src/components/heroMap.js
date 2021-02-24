@@ -10,8 +10,9 @@ import { fitBounds } from '@math.gl/web-mercator';
 import { getCSV } from '../utils';
 
 const MapContainer = styled.div`
-    width:600px;
-    height:400px;
+    width:50vw;
+    max-width:570px;
+    aspect-ratio:6/4;
     position:relative;
     pointer-events:none;
     cursor:default;
@@ -33,8 +34,8 @@ const MapContainer = styled.div`
 `
 // US bounds
 const bounds = fitBounds({
-    width: 600,
-    height: 400,
+    width: 570 < window.innerWidth*0.5 ? 570 : window.innerWidth*0.5,
+    height: 380 < window.innerWidth*0.33 ? 380 : window.innerWidth*0.33,
     bounds: [[-130.14, 53.96],[-67.12, 19]]
 })
 
