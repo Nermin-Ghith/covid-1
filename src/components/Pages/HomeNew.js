@@ -58,6 +58,7 @@ const Hero = styled.div`
     margin:0 auto;
     padding:50px 10px 0 10px;
     z-index:1;
+    min-height:calc(80vh - 93px);
     p {
         
         font-family: 'Lato', sans-serif;
@@ -266,7 +267,7 @@ const CenteredGrid = styled(Grid)`
 
 const MapWrapper = styled.div`
     position:absolute;
-    top:75px;
+    top:calc(8vh + 93px);
     right:15px;
     z-index:0;
 `
@@ -290,12 +291,13 @@ function Home(){
            <StaticNavbar/>
            <HomePageContent>
                 <Hero>
+                    <Gutter vh={5}/>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
                             <h1>Near Real-Time Exploration of the <NoBreak>COVID-19</NoBreak> Pandemic</h1>
                         </Grid>
                         
-                        <Gutter h={20}/>
+                        <Gutter vh={5}/>
 
                         <Grid item xs={12} md={5}> 
                             <p>
@@ -309,7 +311,7 @@ function Home(){
                         </Grid>
                         <Grid item xs={12} md={7}></Grid>
                         
-                        <Gutter h={40}/>
+                        <Gutter vh={10}/>
 
                         <CenteredGrid item xs={12} md={5} id="HomeGeocoder">
                             <Geocoder 
@@ -332,9 +334,10 @@ function Home(){
                         </CenteredGrid>
                     </Grid>
                     
-                <MapWrapper>
-                    <HeroMap/>
-                </MapWrapper>
+                    <MapWrapper>
+                        <HeroMap/>
+                    </MapWrapper>
+                    <Gutter h={20}/>
                 </Hero>
                 <FastTrackInsights />
                 <Features>

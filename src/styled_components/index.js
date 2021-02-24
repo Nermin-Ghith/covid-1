@@ -175,5 +175,5 @@ export const ContentContainer = styled.div`
 export const Gutter = styled.div`
     width:100%;
     display:block;
-    height: ${props => props.h}px;
+    height: ${props => props.h ? `${props.h}px` : props.vh ? `${props.vh}vh` : 0};
 `

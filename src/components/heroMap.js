@@ -63,8 +63,8 @@ export default function HeroMap(){
     const [dateList, setDateList] = useState([]);
     const [dataBins, setDataBins] = useState([]);
     const [currDate, setCurrDate] = useState({
-        current:'2020-01-30',
-        previous:'2020-01-23'
+        current:'2020-03-30',
+        previous:'2020-03-23'
     });
     const [intervalFn, setIntervalFn] = useState(null);
 
@@ -185,8 +185,8 @@ export default function HeroMap(){
                 }
             } else {
                 return {
-                    current: '2020-01-30',
-                    previous: '2020-01-23'
+                    current:'2020-03-30',
+                    previous:'2020-03-23'
                 }
             }
         }
