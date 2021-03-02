@@ -10,7 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.21.1",
     "fs": "^0.0.1-security",
-    "google-protobuf": "^3.15.3"
+    "google-protobuf": "^3.15.3",
+    "pbf": "^3.2.1"
   }
 }
