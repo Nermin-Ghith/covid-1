@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message Dot {
+    int32 raceCode = 1;
+    float latitude = 2;
+    float longitude = 3;
+}
+
+message Dots {
+    repeated Dot dots = 1;
+}
