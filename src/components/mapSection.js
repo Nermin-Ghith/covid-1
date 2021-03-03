@@ -11,6 +11,7 @@ import {MapView, FlyToInterpolator} from '@deck.gl/core';
 import { PolygonLayer, ScatterplotLayer, IconLayer, TextLayer } from '@deck.gl/layers';
 import {fitBounds} from '@math.gl/web-mercator';
 import MapboxGLMap from 'react-map-gl';
+import GL from '@luma.gl/constants';
 
 // component, action, util, and config import
 import { MapTooltipContent, Geocoder } from '../components';
@@ -19,6 +20,10 @@ import { mapFn, dataFn, getVarId, getCSV, getCartogramCenter, getDataForCharts, 
 import { colors, colorScales, MAPBOX_ACCESS_TOKEN } from '../config';
 import MAP_STYLE from '../config/style.json';
 import * as SVG from '../config/svg'; 
+
+// PBF import 
+import * as Pbf from 'pbf';
+import { Dots as DotsSchema } from '../proto/dotDensity.js';
 
 // US bounds
 const bounds = fitBounds({
@@ -188,15 +193,17 @@ function MapSection(props){
         bearing:0,
         pitch:0
     })
+
+    const [currZoom, setCurrZoom] = useState(1)
     
     // locally stored data and color values
     // const [currVarId, setCurrVarId] = useState(null);
     
     // async fetched data and cartogram center
-    const [hospitalData, setHospitalData] = useState(null);
-    const [clinicData, setClinicData] = useState(null);
+    const [hospitalData, setHospitalData] = useState([]);
+    const [clinicData, setClinicData] = useState([]);
     const [storedCenter, setStoredCenter] = useState(null);
-    
+    const [dotDensityData, setDotDensityData] = useState([])
     // share button notification
     const [shared, setShared] = useState(false);
     
@@ -246,6 +253,8 @@ function MapSection(props){
                 y:e.pageY
             }))
         })
+
+        if (!dotDensityData.length) loadDotDensityData()
     },[])
 
     // create unique var id -- used only for cartogram data
@@ -654,11 +663,35 @@ function MapSection(props){
         }  
       }, []);
 
+        
+    const loadDotDensityData = async () => {
+        fetch(`${process.env.PUBLIC_URL}/proto/dotsBinary3.pbf`)
+        .then(r => r.arrayBuffer())
+        .then(r => {
+            var pbf = new Pbf(r);
+            var obj = DotsSchema.read(pbf);
+            setDotDensityData(obj.dots)
+        })
+    }
+    const parameters = {
+        // // prevent flicker from z-fighting
+        [GL.DEPTH_TEST]: false,
+    
+        [GL.BLEND]: true,
+        [GL.BLEND_SRC_ALPHA]: GL.ZERO,
+        [GL.BLEND_DST_ALPHA]: GL.ONE,
+        [GL.BLEND_EQUATION_ALPHA]: GL.FUNC_ADD,
+        [GL.BLEND_SRC_RGB]: GL.ZERO,
+        [GL.BLEND_DST_RGB]: GL.ONE,
+        [GL.BLEND_EQUATION_RGB]: GL.FUNC_REVERSE_SUBTRACT,
+        // // [GL.BLEND_EQUATION_RGB]: GL.FUNC_REVERSE_SUBTRACT,
+    }
+    
     const FullLayers = {
         choropleth: new PolygonLayer({
             id: 'choropleth',
             data: currentMapData.data,
-            getFillColor: d => d.color,
+            getFillColor: d => [d.color[0],d.color[1],d.color[2]],
             getPolygon: d => d.geom,
             getElevation: d => d.height,
             pickable: true,
@@ -674,7 +707,8 @@ function MapSection(props){
                 getPolygon: [currentMapData.params, dataParams.variableName, mapParams.mapType, mapParams.bins.bins, mapParams.bins.breaks, mapParams.binMode, mapParams.fixedScale, mapParams.vizType, mapParams.colorScale, mapParams.customScale, dataParams.nIndex, dataParams.nRange, storedLisaData, currentData],
                 getElevation: [currentMapData.params, dataParams.variableName, mapParams.mapType, mapParams.bins.bins, mapParams.bins.breaks, mapParams.binMode, mapParams.fixedScale, mapParams.vizType, mapParams.colorScale, mapParams.customScale, dataParams.nIndex, dataParams.nRange, storedLisaData, currentData],
                 getFillColor: [currentMapData.params, dataParams.variableName, mapParams.mapType, mapParams.bins.bins, mapParams.bins.breaks, mapParams.binMode, mapParams.fixedScale, mapParams.vizType, mapParams.colorScale, mapParams.customScale, dataParams.nIndex, dataParams.nRange, storedLisaData, currentData],
-            }
+            }, 
+            // parameters 
         }),
         choroplethHighlight:  new PolygonLayer({
             id: 'highlightLayer',
@@ -801,11 +835,28 @@ function MapSection(props){
                 getRadius: [storedCartogramData, mapParams.vizType]
             },
         }),
+        dotDensity: new ScatterplotLayer({
+            id: 'dot density layer',
+            data: dotDensityData,
+            getPosition: f => [f.longitude, f.latitude],
+            pickable:false,
+            getFillColor: [0,0,0,255],
+            getRadius: 12-currZoom, 
+            radiusScale: 100,
+            sizeUnits: 'pixels',
+            updateTriggers: {
+                getPosition: dotDensityData,
+                getRadius: currZoom
+            },
+            // parameters
+        })
     }
 
     const getLayers = useCallback((layers, vizType, overlays, resources, currData) => {
         var LayerArray = []
 
+        
+        // LayerArray.push(layers['dotDensity'])
         if (vizType === 'cartogram') {
             LayerArray.push(layers['cartogramBackground'])
             LayerArray.push(layers['cartogram'])
@@ -1009,6 +1060,9 @@ function MapSection(props){
                     onLoad={() => {
                         dispatch(setMapLoaded(true))
                     }}
+                    onViewStateChange={viewState => {
+                        console.log(currZoom);
+                        setCurrZoom(viewState.viewState.zoom)}}
                     >
                 </MapboxGLMap >
             </DeckGL>

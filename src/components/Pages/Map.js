@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-
 // Helper and Utility functions //
 // first row: data loading
 // second row: data parsing for specific outputs
@@ -34,9 +33,7 @@ import { colorScales, fixedScales, dataPresets, variablePresets, colors } from '
 // 2: App assembles all of the components together and sends Props down
 //    (as of 12/1 only Preloader uses props and is a higher order component)
 
-
 function App() {
-
   const dateLists = getDateLists()
   // static variables for floating panel sizing
   let [ 
