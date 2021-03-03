@@ -1,9 +1,14 @@
 const fs = require("fs");
+const Schema = require("./dotDensity_pb");
 
-var myObj = []
+const dots = new Schema.Dots();
 
 for (let i = 0; i < 1_000_000; i++){
-    myObj.push([i%8, Math.round(Math.random()*1e10)/1e6,Math.round(Math.random()*1e10)/1e6,])
+    const currentDot = new Schema.Dot()
+    currentDot.setRacecode(i%8)
+    currentDot.setLatitude(Math.round(Math.random()*1e10)/1e6)
+    currentDot.setLongitude(Math.round(Math.random()*1e10)/1e6)
+    dots.addDots(currentDot)
 }
-
-fs.writeFileSync('dotsJson', JSON.stringify(myObj))
+const bytes =  dots.serializeBinary()
+fs.writeFileSync("dotsBinary2", bytes)
