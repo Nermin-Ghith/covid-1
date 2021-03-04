@@ -58,14 +58,14 @@ const dataFn = (numeratorData, denominatorData, dataParams, dateList)  => {
   const dRange = dIndex <= dataParams.dRange ? dIndex : dataParams.dRange;
 
   const numeratorValue = 
-    numeratorData.type === 'time-series-cumulative' ? (numeratorData.data[dateList[nIndex]] - numeratorData.data[dateList[nIndex-nRange]]||0)/nRange||1 :
+    numeratorData.type === 'time-series-cumulative' ? (numeratorData.data[dateList[nIndex]] - numeratorData.data[dateList[nIndex-nRange]]||0)/(nRange||1) :
     numeratorData.type === 'property' ? numeratorData.data[nProperty] : 
     numeratorData.type === 'time-series' ? averageNumerator(numeratorData.data, nIndex, nRange, dateList) :
     0
   
   const denominatorValue = 
     dProperty === null && dIndex === null ? 1 :
-    denominatorData.type === 'time-series-cumulative' ? (denominatorData.data[dateList[dIndex]] - denominatorData.data[dateList[dIndex-dRange]]||0)/dRange||1 :
+    denominatorData.type === 'time-series-cumulative' ? (denominatorData.data[dateList[dIndex]] - denominatorData.data[dateList[dIndex-dRange]]||0)/(dRange||1) :
     denominatorData.type === 'property' ? denominatorData.data[dProperty] : 
     denominatorData.type === 'time-series' ? averageNumerator(denominatorData.data, dIndex, dRange, dateList) :
     0

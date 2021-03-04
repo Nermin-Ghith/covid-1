@@ -50,6 +50,7 @@ const getDefaultDimensions = () => ({
 })
 
 function App() {
+  const t0 = performance.now()
 
   const dateLists = getDateLists()
 
@@ -131,10 +132,10 @@ function App() {
         bins: mapParams.mapType === "natural_breaks" ? nb.bins : ['Lower Outlier','< 25%','25-50%','50-75%','>75%','Upper Outlier'],
         breaks: [-Math.pow(10, 12), ...nb.breaks.slice(1,-1), Math.pow(10, 12)]
       }
+      console.log(performance.now() - t0)
     } else {
       bins = fixedScales[dataParams.fixedScale]
     }
-    console.log(bins)
     // // store data, data name, and column names
     // dispatch(
     //   dataLoad({

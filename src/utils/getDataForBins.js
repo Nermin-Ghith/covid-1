@@ -10,12 +10,6 @@ const getDataForBins = (params) => {
     const combinedKeys = [...tableKeys, ...denominatorKeys].filter((value, index, self) => tableKeys.indexOf(value)!==-1 && denominatorKeys.indexOf(value)!==-1 && self.indexOf(value) === index)
     const dateList = dateLists[numeratorData.dateList];
 
-    console.log()
-    console.log(numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])
-    console.log((numeratorData.data[combinedKeys[0]][dateList[nIndex]]-numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])/dataParams.nRange)
-    console.log(denominatorData.data[combinedKeys[0]]['population'])
-    console.log(((numeratorData.data[combinedKeys[0]][dateList[nIndex]]-numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])/dataParams.nRange)/denominatorData.data[combinedKeys[0]]['population'])
-    console.log(((numeratorData.data[combinedKeys[0]][dateList[nIndex]]-numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])/dataParams.nRange)/denominatorData.data[combinedKeys[0]]['population']*100_000)
     // declare empty array for return variables
     let rtn = new Array(tableKeys.length).fill(0);
 
@@ -41,15 +35,6 @@ const getDataForBins = (params) => {
     } else {
        while (n>0) {
             n--;
-            if (n===0){
-                
-            console.log(dataFn(
-                {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
-                {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
-                dataParams, 
-                dateList
-            ))
-            }
             rtn[n] = dataFn(
                 {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
                 {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
