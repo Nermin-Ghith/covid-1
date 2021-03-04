@@ -1,6 +1,12 @@
-const getDataForCharts = (data, table, dateIndices, dateList, name=null, interval=1) => {
+const getDataForCharts = (params) => {
+    const { data, dataParams, dateLists } = params;
     // get list of all features (GEOIDs/FIPS)
-    let features = Object.keys(data);
+    const features = Object.keys(data.data);
+    const dateIndices = data.dateIndices;
+    const dateList = dateLists[data.dateList]
+    const name = params.name ? params.name : null;
+    const interval = params.interval ? params.interval : 1;
+    
     // counter for days 
     let n = 0;
     // return array
@@ -10,6 +16,7 @@ const getDataForCharts = (data, table, dateIndices, dateList, name=null, interva
 
     let countCol;
     let sumCol;
+
     // based on whether specific to geography, or all cases
     if (name === null) {
         countCol = 'count'
@@ -32,8 +39,7 @@ const getDataForCharts = (data, table, dateIndices, dateList, name=null, interva
             let sum = 0;
             let i = 0;
             while (i<features.length) {
-                if (data[features[i]][table] !== undefined) sum += data[features[i]][table][n]||0
-                // tempObj[`n${i}`] = data[features[i]][table][n]
+                if (data.data[features[i]] !== undefined) sum += data.data[features[i]][dateList[n]]||0
                 i++;
             }
             tempObj[sumCol] = sum

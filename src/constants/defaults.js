@@ -1,5 +1,4 @@
 export const INITIAL_STATE = {
-  geodaProxy: null,
   storedData: {},
   storedGeojson: {},
   storedLisaData: {},
@@ -14,9 +13,6 @@ export const INITIAL_STATE = {
   selectionIndex: [],
   centroids: {},
   dates: {},
-  currDate: '',
-  currDateIndex: '',
-  startDateIndex: '',
   currentZVariable: null,
   currentMethod: 'natural_breaks',
   currentOverlay: '',

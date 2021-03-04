@@ -1,33 +1,61 @@
 import dataFn from './dataFunction';
 // this function loops through the current data set and provides data for GeodaJS to create custom breaks 
-const getDataForBins = (tableData, dataParams) => {
-
+const getDataForBins = (params) => {
+    // destructure 
+    const { dataParams, numeratorData, denominatorData, dateLists } = params;
     const { numerator, nProperty, nIndex, denominator, dType, dIndex} = dataParams;
-    if (tableData[0][denominator] === undefined) return;
+    if (numerator === undefined) return;
+    const tableKeys = Object.keys(numeratorData.data);
+    const denominatorKeys = Object.keys(denominatorData.data)
+    const combinedKeys = [...tableKeys, ...denominatorKeys].filter((value, index, self) => tableKeys.indexOf(value)!==-1 && denominatorKeys.indexOf(value)!==-1 && self.indexOf(value) === index)
+    const dateList = dateLists[numeratorData.dateList];
+
+    console.log()
+    console.log(numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])
+    console.log((numeratorData.data[combinedKeys[0]][dateList[nIndex]]-numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])/dataParams.nRange)
+    console.log(denominatorData.data[combinedKeys[0]]['population'])
+    console.log(((numeratorData.data[combinedKeys[0]][dateList[nIndex]]-numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])/dataParams.nRange)/denominatorData.data[combinedKeys[0]]['population'])
+    console.log(((numeratorData.data[combinedKeys[0]][dateList[nIndex]]-numeratorData.data[combinedKeys[0]][dateList[nIndex-dataParams.nRange]])/dataParams.nRange)/denominatorData.data[combinedKeys[0]]['population']*100_000)
     // declare empty array for return variables
-    let rtn = new Array(tableData.length);
-    // let rtnIndex = {};
+    let rtn = new Array(tableKeys.length).fill(0);
 
     // length of data table to loop through
-    let n = tableData.length;
+    let n = combinedKeys.length;
 
     // this checks if the bins generated should be dynamic (generating for each date) or fixed (to the most recent date)
     if (nIndex === null && nProperty === null) {
         // if fixed, get the most recent date
-        let tempIndex = tableData[0][numerator].length-1;
+        let tempIndex = numeratorData.dateIndices.slice(-1)[0];
         // if the denominator is time series data (eg. deaths / cases this week), make the indices the same (most recent)
-        let tempDIndex = dType === 'time-series' ? tableData[0][denominator].length-1 : dIndex;
+        let tempDIndex = dType === 'time-series' ? numeratorData.dateIndices.slice(-1)[0] : dIndex;
         // loop through, do appropriate calculation. add returned value to rtn array
         while (n>0) {
             n--;
-            rtn[n] = dataFn(tableData[n][numerator], tableData[n][denominator], {...dataParams, nIndex:tempIndex, dIndex: tempDIndex})||0
-            // rtnIndex[tableData[n].properties.GEOID] = n 
+            rtn[n] = dataFn(
+                {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
+                {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
+                {...dataParams, nIndex:tempIndex, dIndex: tempDIndex}, 
+                dateList
+            )||0
         }
     } else {
        while (n>0) {
             n--;
-            rtn[n] = dataFn(tableData[n][numerator], tableData[n][denominator], dataParams)||0
-            // rtnIndex[tableData[n].properties.GEOID] = n 
+            if (n===0){
+                
+            console.log(dataFn(
+                {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
+                {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
+                dataParams, 
+                dateList
+            ))
+            }
+            rtn[n] = dataFn(
+                {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
+                {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
+                dataParams, 
+                dateList
+            )||0
         }
     }
     return rtn;   

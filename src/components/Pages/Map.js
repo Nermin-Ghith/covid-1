@@ -57,7 +57,7 @@ function App() {
   // dispatches to the store, we need checks to make sure side effects
   // are OK to trigger. Issues arise with missing data, columns, etc.
   const {storedData, storedGeojson, currentData, mapParams, dataParams, dateIndices, mapLoaded } = useSelector(state => state);
-  // const fullState = useSelector(state => state)
+  const fullState = useSelector(state => state)
 
   // gda_proxy is the WebGeoda proxy class. Generally, having a non-serializable
   // data in the state is poor for performance, but the App component state only
@@ -69,89 +69,90 @@ function App() {
   // // Dispatch helper functions for side effects and data handling
   // Get centroid data for cartogram
   // const getCentroids = (geojson, gda_proxy) =>  dispatch(setCentroids(gda_proxy.GetCentroids(geojson), geojson))
-  
+
   // Main data loader
   // This functions asynchronously accesses the Geojson data and CSVs
   //   then performs a join and loads the data into the store
   const loadData = async (params, gda_proxy) => {
     setIsLoading(true)
     // destructure parameters
-    const { geojson, csvs, joinCols, tableNames, accumulate, dateList } = params
+    const { geojson, tables } = params;
+    const currentNumerator = tables[dataParams.numerator]['csv'];
+    const currentDenominator = dataParams.denominator === 'properties' ? geojson : tables[dataParams.denominator]['csv'];
+    // check for already loaded data
+    for (const property in tables) { if (storedData.hasOwnProperty(property.csv)) delete tables.property }
+    
     // promise all data fetching - CSV and Json
-    const csvPromises = csvs.map(csv => 
-      getParseCSV(
-        `${process.env.PUBLIC_URL}/csv/${csv}.csv`, 
-        joinCols[1], 
-        accumulate.includes(csv),
-        dateLists[dateList[csv]]
-      ).then(result => {return result}))
-
-    Promise.all([
-      loadJson(`${process.env.PUBLIC_URL}/geojson/${geojson}`, gda_proxy).then(result => {return result}),
-      ...csvPromises
-    ]).then(values => {
-      // store geojson lookup table
-      // merge data and get results
-      let tempData = mergeData(values[0]['data'], joinCols[0], values.slice(1,), tableNames, joinCols[1]);
-      let ColNames = getColumns(values.slice(1,), tableNames);
-      let DateIndices = getDateIndices(values.slice(1,), tableNames);
-      let denomIndices = DateIndices[dataParams.numerator]
-      let lastIndex = denomIndices !== null ? denomIndices.slice(-1,)[0] : null;
-      let chartData = getDataForCharts(tempData, 'cases', DateIndices['cases'], dateLists.isoDateList);
-      let binData = getDataForBins(tempData, {...dataParams, nIndex: lastIndex || dataParams.nIndex, binIndex: lastIndex || dataParams.binIndex});
-      let bins;
-
-      if (dataParams.fixedScale === null || dataParams.fixedScale === undefined){
-        // calculate breaks
-        let nb = gda_proxy.custom_breaks(
-          geojson, 
-          mapParams.mapType,
-          mapParams.nBins,
-          null,
-          binData
-        );        
-
-        bins = {
-          bins: mapParams.mapType === "natural_breaks" ? nb.bins : ['Lower Outlier','< 25%','25-50%','50-75%','>75%','Upper Outlier'],
-          breaks: [-Math.pow(10, 12), ...nb.breaks.slice(1,-1), Math.pow(10, 12)]
-        }
-      } else {
-        bins = fixedScales[dataParams.fixedScale]
+    const csvPromises = Object.values(tables).map(entry => 
+      getParseCSV({
+        url:`${process.env.PUBLIC_URL}/csv/${entry.csv}.csv`, 
+        joinColumn: entry.joinColumn, 
+        accumulate: entry.accumulate,
+        dateList: dateLists[entry.dateList]
+      }));
+    
+    // fetch geodata and CSV data
+    const geoData = await loadJson(`${process.env.PUBLIC_URL}/geojson/${geojson}`, gda_proxy);
+    const csvData = await (await Promise.all([...csvPromises])).reduce((map, obj, index) => { 
+      map[Object.values(tables)[index]['csv']] = {...obj, ...Object.values(tables)[index]};
+      return map;
+    }, {});
+    const tabularData = {
+      ...csvData,
+      [geojson]: {
+        'type':'property',
+        'data': geoData.data.features.map(f => f.properties).reduce((map, obj) => { map[obj.GEOID] = obj; return map; }, {})
       }
+    } 
+    
+    // extract metadata and chart data
+    const lastIndex = csvData[currentNumerator] ? csvData[currentNumerator].dateIndices.slice(-1)[0] : null;
+    const chartData = getDataForCharts({data: tabularData[currentNumerator], dataParams, dateLists});
+    const binData = getDataForBins({
+      numeratorData: tabularData[currentNumerator], 
+      denominatorData: tabularData[currentDenominator], 
+      dataParams:{...dataParams, nIndex: lastIndex || dataParams.nIndex, binIndex: lastIndex || dataParams.binIndex}, 
+      dateLists
+    });
 
-      // store data, data name, and column names
-      dispatch(
-        dataLoad({
-          storeData: {
-            data: tempData, 
-            name: geojson
-          },
-          currentData: geojson,
-          columnNames: {
-            data: ColNames,
-            name: geojson
-          },
-          dateIndices: {
-            data: DateIndices,
-            name: geojson
-          },
-          storeGeojson: {
-            data: values[0]['geoidIndex'],
-            name: geojson
-          },
-          chartData: chartData,
-          mapParams: {
-            bins,
-            colorScale: colorScales[dataParams.colorScale || mapParams.mapType]
-          },
-          variableParams: {
-            nIndex: lastIndex || dataParams.nIndex,
-            binIndex: lastIndex || dataParams.binIndex
-          },
-        })
-      )
-      setIsLoading(false)
-    })
+    let bins;
+
+    if (dataParams.fixedScale === null || dataParams.fixedScale === undefined){
+      // calculate breaks
+      let nb = gda_proxy.custom_breaks(
+        geojson, 
+        mapParams.mapType,
+        mapParams.nBins,
+        null,
+        binData
+      );        
+
+      bins = {
+        bins: mapParams.mapType === "natural_breaks" ? nb.bins : ['Lower Outlier','< 25%','25-50%','50-75%','>75%','Upper Outlier'],
+        breaks: [-Math.pow(10, 12), ...nb.breaks.slice(1,-1), Math.pow(10, 12)]
+      }
+    } else {
+      bins = fixedScales[dataParams.fixedScale]
+    }
+    console.log(bins)
+    // // store data, data name, and column names
+    // dispatch(
+    //   dataLoad({
+    //     tabularData,
+    //     geoData,
+    //     currentData: geojson,
+    //     chartData,
+    //     mapParams: {
+    //       bins,
+    //       colorScale: colorScales[dataParams.colorScale || mapParams.mapType]
+    //     },
+    //     variableParams: {
+    //       nIndex: lastIndex || dataParams.nIndex,
+    //       binIndex: lastIndex || dataParams.binIndex
+    //     },
+    //   })
+    // )
+    setIsLoading(false)
   }
 
   const updateBins = useCallback((params) => {
@@ -353,7 +354,7 @@ function App() {
       <NavBar />
       {isLoading && <div id="loadingIcon" style={{backgroundImage: `url('${process.env.PUBLIC_URL}assets/img/bw_preloader.gif')`}}></div>}
       <header className="App-header" style={{position:'fixed', left: '20vw', top:'100px', zIndex:10}}>
-        {/* <button onClick={() => console.log(fullState)}>Log state</button> */}
+        <button onClick={() => console.log(fullState)}>Log state</button>
       </header>
       <div id="mainContainer" className={isLoading ? 'loading' : ''}>
         <MapSection />

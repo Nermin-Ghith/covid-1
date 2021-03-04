@@ -308,27 +308,41 @@ export const dataPresets = {
     'county_1p3a.geojson': {
         plainName: '1Point3Acres County',
         geojson: 'county_1p3a.geojson', 
-        csvs: [
-            'covid_confirmed_1p3a',
-            'covid_deaths_1p3a',
-            'berkeley_predictions',
-            'chr_health_context',
-            'chr_life',
-            'chr_health_factors',
-        ], 
-        tableNames: [
-            'cases',
-            'deaths',
-            'predictions', 
-            'chr_health_context', 
-            'chr_life', 
-            'chr_health_factors',
-        ],
-        joinCols: ['GEOID', ['FIPS','fips','countyFIPS', 'GEOID']], 
-        accumulate: ['covid_confirmed_1p3a','covid_deaths_1p3a'],
-        dateList: {
-            'covid_confirmed_1p3a': 'isoDateList', 
-            'covid_deaths_1p3a': 'isoDateList'
+        tables: {
+            cases:{
+                csv: 'covid_confirmed_1p3a',
+                type: 'time-series-cumulative',
+                accumulate: true,
+                joinColumn: 'GEOID',
+                dateList:'isoDateList'
+            },
+            deaths:{
+                csv: 'covid_deaths_1p3a',
+                type: 'time-series-cumulative',
+                joinColumn: 'GEOID',
+                accumulate: true,
+                dateList:'isoDateList'
+            },
+            predictions:{
+                csv: 'berkeley_predictions',
+                type: 'properties',
+                joinColumn: 'fips'
+            },
+            chr_health_context:{
+                csv: 'chr_health_context',
+                type: 'properties',
+                joinColumn: 'FIPS'
+            },
+            chr_life:{
+                csv: 'chr_life',
+                type: 'properties',
+                joinColumn: 'FIPS'
+            },
+            chr_health_factors:{
+                csv: 'chr_health_factors',
+                type: 'properties',
+                joinColumn: 'FIPS'
+            }
         }
     },
     'county_nyt.geojson': {

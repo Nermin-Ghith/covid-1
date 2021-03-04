@@ -1,17 +1,13 @@
 import { getJson, getGeoidIndex } from '../utils';
 
 const loadJson = async (url, gda_proxy) => {
-const data = getJson(url).then(values => {
-    gda_proxy.ReadGeojsonMap(url.split('/').slice(-1,)[0], values.ab);
-    return values.response.json().then(
-    data => {
-        return {
-        data: data,
-        geoidIndex: getGeoidIndex(data.features)
-        }
-    })
-})
-return data;
+    const data = await getJson(url)
+    gda_proxy.ReadGeojsonMap(url.split('/').slice(-1,)[0], data.ab);
+    const values = await data.response.json()
+    return {
+        data: values,
+        geoidIndex: getGeoidIndex(values.features)
+    }
 }
 
 export default loadJson;
