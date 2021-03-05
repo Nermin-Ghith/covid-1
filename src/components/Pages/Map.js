@@ -50,14 +50,13 @@ const getDefaultDimensions = () => ({
 })
 
 function App() {
-  const t0 = performance.now()
 
   const dateLists = getDateLists()
 
   // These selectors access different pieces of the store. While App mainly
   // dispatches to the store, we need checks to make sure side effects
   // are OK to trigger. Issues arise with missing data, columns, etc.
-  const {storedData, storedGeojson, currentData, mapParams, dataParams, dateIndices, mapLoaded } = useSelector(state => state);
+  const {storedTabularData, storedGeojson, currentNumerator, currentDenominator, currentData, mapParams, dataParams, dateIndices, mapLoaded } = useSelector(state => state);
   const fullState = useSelector(state => state)
 
   // gda_proxy is the WebGeoda proxy class. Generally, having a non-serializable
@@ -81,7 +80,7 @@ function App() {
     const currentNumerator = tables[dataParams.numerator]['csv'];
     const currentDenominator = dataParams.denominator === 'properties' ? geojson : tables[dataParams.denominator]['csv'];
     // check for already loaded data
-    for (const property in tables) { if (storedData.hasOwnProperty(property.csv)) delete tables.property }
+    for (const property in tables) { if (storedTabularData.hasOwnProperty(property.csv)) delete tables.property }
     
     // promise all data fetching - CSV and Json
     const csvPromises = Object.values(tables).map(entry => 
@@ -132,40 +131,46 @@ function App() {
         bins: mapParams.mapType === "natural_breaks" ? nb.bins : ['Lower Outlier','< 25%','25-50%','50-75%','>75%','Upper Outlier'],
         breaks: [-Math.pow(10, 12), ...nb.breaks.slice(1,-1), Math.pow(10, 12)]
       }
-      console.log(performance.now() - t0)
     } else {
       bins = fixedScales[dataParams.fixedScale]
     }
-    // // store data, data name, and column names
-    // dispatch(
-    //   dataLoad({
-    //     tabularData,
-    //     geoData,
-    //     currentData: geojson,
-    //     chartData,
-    //     mapParams: {
-    //       bins,
-    //       colorScale: colorScales[dataParams.colorScale || mapParams.mapType]
-    //     },
-    //     variableParams: {
-    //       nIndex: lastIndex || dataParams.nIndex,
-    //       binIndex: lastIndex || dataParams.binIndex
-    //     },
-    //   })
-    // )
+    // store data, data name, and column names
+    dispatch(
+      dataLoad({
+        tabularData,
+        geoData,
+        currentData: geojson,
+        currentNumerator,
+        currentDenominator,
+        chartData,
+        mapParams: {
+          bins,
+          colorScale: colorScales[dataParams.colorScale || mapParams.mapType]
+        },
+        variableParams: {
+          nIndex: lastIndex || dataParams.nIndex,
+          binIndex: lastIndex || dataParams.binIndex
+        },
+      })
+    )
     setIsLoading(false)
   }
 
   const updateBins = useCallback((params) => {
-    const { storedData, currentData, dataParams, mapParams, gda_proxy, colorScales } = params;
-    if (
-      !storedData.hasOwnProperty(currentData) || 
-      !storedData[currentData][0].hasOwnProperty(dataParams.numerator)
-    ) { return };
+    const { numeratorData, denominatorData, currentData, dataParams, mapParams, gda_proxy, colorScales } = params;
 
-    if (gda_proxy !== null && storedData.hasOwnProperty(currentData) && mapParams.mapType !== "lisa"){
+    // If tabular data not loaded, return nothing
+    if ( currentNumerator === undefined ) { return };
+
+    if (gda_proxy !== null && numeratorData && mapParams.mapType !== "lisa"){
       if (dataParams.fixedScale === null || mapParams.mapType !== 'natural_breaks') {
-        let binData = getDataForBins( storedData[currentData], dataParams )
+        let binData = getDataForBins({
+          numeratorData, 
+          denominatorData, 
+          dataParams, 
+          dateLists
+        });
+        
         let nb = gda_proxy.custom_breaks(
           currentData, 
           mapParams.mapType, 
@@ -256,20 +261,18 @@ function App() {
   useEffect(() => {
     if (gda_proxy === null) {
       return;
-    } else if (storedData === {}) {
+    } else if (storedTabularData === {}) {
       loadData(
         dataPresets[currentData],
         gda_proxy
       )
-    } else if (storedData[currentData] === undefined) {
+    } else if (storedTabularData[currentNumerator] === undefined) {
       loadData(
         dataPresets[currentData],
         gda_proxy
       )
-    } else if (dateIndices[currentData] !== undefined) {
-      
-      let denomIndices = dateIndices[currentData][dataParams.numerator]
-      let lastIndex = denomIndices !== null ? denomIndices.slice(-1,)[0] : null;
+    } else if (storedTabularData[currentNumerator] !== undefined) {
+      const lastIndex = storedTabularData[currentNumerator]['dateIndices'].slice(-1)[0]
       dispatch(
         dataLoadExisting({
           variableParams: {
@@ -278,18 +281,22 @@ function App() {
             dRange: dataParams.dType === 'time-series' ? dataParams.nRange : dataParams.dRange,
             binIndex: lastIndex || dataParams.nIndex,
           },
-          chartData: getDataForCharts(storedData[currentData],'cases', dateIndices[currentData]['cases'], dateLists.isoDateList)
+          chartData: getDataForCharts({data: storedTabularData[currentNumerator], dataParams, dateLists})
         })
       )
-      updateBins( { storedData, currentData, mapParams, gda_proxy, colorScales,
+      updateBins({
+        numeratorData: storedTabularData[currentNumerator], 
+        denominatorData: storedTabularData[currentDenominator], 
+        currentData, 
         dataParams: { 
           ...dataParams,  
           nIndex: lastIndex || dataParams.nIndex,
           binIndex: lastIndex || dataParams.nIndex,
-        }, 
-      })
-      
-      // updateBins();
+        },  
+        mapParams, 
+        gda_proxy, 
+        colorScales 
+      });
     }
   },[gda_proxy, currentData])
 
@@ -302,11 +309,13 @@ function App() {
           getLisaValues(
             gda_proxy, 
             currentData, 
-            getDataForLisa(
-              storedData[currentData], 
-              dataParams,
-              storedGeojson[currentData].indexOrder
-            )
+            getDataForLisa({
+              numeratorData: storedTabularData[currentNumerator], 
+              denominatorData: storedTabularData[currentDenominator], 
+              dataParams, 
+              order: storedGeojson[currentData].indexOrder, 
+              dateLists
+            })
           )
         )
       )
@@ -319,26 +328,48 @@ function App() {
             getCartogramValues(
               gda_proxy, 
               currentData, 
-              getDataForLisa( storedData[currentData], dataParams, storedGeojson[currentData].indexOrder )
+              getDataForLisa({
+                numeratorData: storedTabularData[currentNumerator], 
+                denominatorData: storedTabularData[currentDenominator], 
+                dataParams, 
+                order: storedGeojson[currentData].indexOrder, 
+                dateLists
+              })
             )
           )
         )
       }
     }
   }, [currentData, storedGeojson[currentData], dataParams.numerator, dataParams.nProperty, dataParams.nRange, dataParams.denominator, dataParams.dProperty, dataParams.nIndex, dataParams.dIndex, mapParams.binMode, dataParams.variableName, mapParams.mapType, mapParams.vizType])
-
+  
   // Trigger on parameter change for metric values
   // Gets bins and sets map parameters
   useEffect(() => {
-    if (storedData.hasOwnProperty(currentData) && gda_proxy !== null && mapParams.binMode !== 'dynamic' && mapParams.mapType !== 'lisa') {
-      updateBins( { storedData, currentData, dataParams, mapParams, gda_proxy, colorScales } );
+    if (storedTabularData.hasOwnProperty(currentNumerator) && gda_proxy !== null && mapParams.binMode !== 'dynamic' && mapParams.mapType !== 'lisa') {
+      updateBins({
+        numeratorData: storedTabularData[currentNumerator], 
+        denominatorData: storedTabularData[currentDenominator], 
+        currentData, 
+        dataParams, 
+        mapParams, 
+        gda_proxy, 
+        colorScales 
+      });
     }
   }, [dataParams.numerator, dataParams.nProperty, dataParams.nRange, dataParams.denominator, dataParams.dProperty, dataParams.dRange, mapParams.mapType, mapParams.vizType] );
 
   // Trigger on index change while dynamic bin mode
   useEffect(() => {
-    if (storedData.hasOwnProperty(currentData) && gda_proxy !== null && mapParams.binMode === 'dynamic' && mapParams.mapType !== 'lisa') {
-      updateBins( { storedData, currentData, dataParams: { ...dataParams, binIndex: dataParams.nIndex }, mapParams, gda_proxy, colorScales } );
+    if (storedTabularData.hasOwnProperty(currentNumerator) && gda_proxy !== null && mapParams.binMode === 'dynamic' && mapParams.mapType !== 'lisa') {
+      updateBins({
+        numeratorData: storedTabularData[currentNumerator], 
+        denominatorData: storedTabularData[currentDenominator], 
+        currentData, 
+        dataParams: { ...dataParams, binIndex: dataParams.nIndex },
+        mapParams, 
+        gda_proxy, 
+        colorScales 
+      });
     }
   }, [dataParams.nIndex, dataParams.dIndex, mapParams.binMode, dataParams.variableName, dataParams.nRange, mapParams.mapType, mapParams.vizType] ); 
 
@@ -351,14 +382,14 @@ function App() {
 
   return (
     <div className="Map-App">
-      <Preloader loaded={mapLoaded} />
+      {/* <Preloader loaded={mapLoaded} /> */}
       <NavBar />
       {isLoading && <div id="loadingIcon" style={{backgroundImage: `url('${process.env.PUBLIC_URL}assets/img/bw_preloader.gif')`}}></div>}
       <header className="App-header" style={{position:'fixed', left: '20vw', top:'100px', zIndex:10}}>
         <button onClick={() => console.log(fullState)}>Log state</button>
       </header>
       <div id="mainContainer" className={isLoading ? 'loading' : ''}>
-        <MapSection />
+        {/* <MapSection /> */}
         <TopPanel />
         <Legend 
           variableName={dataParams.variableName} 
@@ -367,7 +398,7 @@ function App() {
           fixedScale={dataParams.fixedScale}
           />
         <VariablePanel />
-        <DataPanel />
+        {/* <DataPanel /> */}
         <Popover /> 
         <NotificationBox />  
         <Draggable 

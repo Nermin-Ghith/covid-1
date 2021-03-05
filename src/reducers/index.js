@@ -5,22 +5,18 @@ var reducer = (state = INITIAL_STATE, action) => {
         case 'DATA_LOAD':
             // main new data loading reducer
             // I: Destructure payload (load) object
-            let { storeData, currentData, columnNames, dateIndices,
-                storeGeojson, chartData, mapParams, 
+            let { tabularData, geoData, currentData, currentNumerator,
+                currentDenominator, chartData, mapParams, 
                 variableParams} = action.payload.load;
 
             // II: Create copies of existing state objects.
             // This is necessary to avoid mutating the state
             let [
-                    dataObj, colDataObj, dateIndexObj, geoDataObj, 
-                    mapParamsDataObj, variableParamsDataObj, panelsDataObj
+                    tabularDataObj, geoDataObj, mapParamsDataObj, variableParamsDataObj
                 ] = [
                     {
-                    ...state.storedData
-                }, {
-                    ...state.cols
-                }, {
-                    ...state.dateIndices
+                    ...state.storedTabularData,
+                    ...tabularData
                 }, {
                     ...state.storedGeojson,
                 }, {
@@ -29,29 +25,21 @@ var reducer = (state = INITIAL_STATE, action) => {
                 }, {
                     ...state.dataParams,
                     ...variableParams
-                }, {
-                    ...state.panelState,
-                    info: false
                 }];
 
-                dataObj[storeData.name] = storeData.data;
-                colDataObj[columnNames.name] = columnNames.data;
-                dateIndexObj[dateIndices.name] = dateIndices.data;
-                geoDataObj[storeGeojson.name] = storeGeojson.data;
+                geoDataObj[currentData] = geoData;
             return {
                 ...state,
-                storedData: dataObj,
-                cols: colDataObj,
-                dateIndices: dateIndexObj,
+                storedTabularData: tabularDataObj,
                 storedGeojson: geoDataObj,
                 mapParams: mapParamsDataObj,
                 dataParams: variableParamsDataObj,
                 currentData,
+                currentNumerator,
+                currentDenominator,
                 selectionKeys: [],
                 selectionIndex: [],
                 chartData,
-                sidebarData: {},
-                panelState: panelsDataObj
 
             };
         case 'DATA_LOAD_EXISTING':
@@ -70,7 +58,6 @@ var reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 dataParams: variableParamsExDataObj,
                 chartData: action.payload.load.chartData,
-                sidebarData: {},
                 selectionKeys: [],
                 selectionIndex: [],
                 panelState: panelsExDataObj
@@ -202,16 +189,11 @@ var reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 use3D: !state.use3D
             }
-        case 'SET_DATA_SIDEBAR':
-            return {
-                ...state,
-                sidebarData: action.payload.data
-            }
         case 'INCREMENT_DATE':
             let dateObj = {
                 ...state.dataParams
             }
-            let currIndices = state.dateIndices[state.currentData][state.dataParams.numerator]
+            let currIndices = state.storedTabularData[state.currentNumerator].dateIndices
             let nextIndex = currIndices[currIndices.indexOf(state.dataParams.nIndex)+action.payload.index]
 
             if (nextIndex === undefined) {

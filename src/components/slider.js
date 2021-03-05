@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Grid from '@material-ui/core/Grid';
 import Slider from '@material-ui/core/Slider';
@@ -188,14 +188,19 @@ const DateSlider = () => {
     const dispatch = useDispatch();  
 
     const currentData = useSelector(state => state.currentData);
+    const currentNumerator = useSelector(state => state.currentNumerator);
     const dataParams = useSelector(state => state.dataParams);
-    const dateIndices = useSelector(state => state.dateIndices);
+    const storedTabularData = useSelector(state => state.storedTabularData);
     const dates = useSelector(state => state.dates);
-    
+
     const [timerId, setTimerId] = useState(null);
+    const [dateIndices, setDateIndices] = useState([]);
+
+    useEffect(() => {
+        setDateIndices(storedTabularData[currentNumerator]?.dateIndices)
+    },[currentNumerator])
     
     const handleChange = (event, newValue) => {
-
         if (dataParams.nType === "time-series" && dataParams.dType === "time-series") {
             dispatch(setVariableParams({nIndex: newValue, dIndex: newValue}))
         } else if (dataParams.nType === "time-series") {
@@ -245,11 +250,11 @@ const DateSlider = () => {
         return rawDate.toLocaleDateString('en-US', options);
     }
     
-    if (dateIndices[currentData] !== undefined) {
+    if (storedTabularData !== null) {
         return (
             <SliderContainer>
                 <Grid container spacing={2} style={{display:'flex', padding: '0 0 10px 0'}}>
-                        {dataParams.rangeType !== 'custom' && 
+                        {((dateIndices || dataParams.nType === 'characteristic') && dataParams.rangeType !== 'custom') && 
                             <DateSelectorContainer item xs={12}>
                                 <DateTitle>{dataParams.nType !== 'characteristic' ? formatDate(`${dates[dataParams.nIndex]}`) : 'Characteristic Data'}</DateTitle>
                             </DateSelectorContainer>
@@ -290,7 +295,7 @@ const DateSlider = () => {
                                 // aria-labelledby="aria-valuetext"
                                 min={1}
                                 max={dates.length}
-                                marks={(dateIndices.hasOwnProperty(currentData) && dateIndices[currentData].hasOwnProperty(dataParams.numerator)) && dateIndices[currentData][dataParams.numerator].map(date => { return { value: date }})}
+                                marks={dateIndices && dateIndices.map(dateIndex => ({ value: dateIndex}))}
                                 step={null}
                                 characteristic={dataParams.nType==="characteristic"}
                         />}
@@ -317,13 +322,13 @@ const DateSlider = () => {
                             valueLabelFormat={valuetext}
                             aria-labelledby="aria-valuetext"
                             min={1}
-                            max={350}
-                            marks={(dateIndices.hasOwnProperty(currentData) && dateIndices[currentData].hasOwnProperty(dataParams.numerator)) && dateIndices[currentData][dataParams.numerator].map(date => { return { value: date }})}
+                            max={dates.length}
+                            marks={dateIndices && dateIndices.map(dateIndex => ({ value: dateIndex}))}
                             step={null}
                         />}
                     </Grid>
-                    {(dataParams.rangeType !== 'custom' && dataParams.nType !== 'characteristic') && <InitialDate>{dates[0]}</InitialDate>}
-                    {(dataParams.rangeType !== 'custom' && dataParams.nType !== 'characteristic') && <EndDate>{dateIndices[currentData] !== undefined && dates[dateIndices[currentData][dataParams.numerator].slice(-1,)[0]]}</EndDate>}
+                    {(dataParams.rangeType !== 'custom' && dataParams.nType !== 'characteristic') && <InitialDate>{dateIndices !== undefined && dates[dateIndices.slice(1)[0]]}</InitialDate>}
+                    {(dataParams.rangeType !== 'custom' && dataParams.nType !== 'characteristic') && <EndDate>{dateIndices !== undefined && dates[dateIndices.slice(-1)[0]]}</EndDate>}
                 </Grid>
             </SliderContainer>
         );
