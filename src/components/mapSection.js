@@ -16,7 +16,7 @@ import MapboxGLMap from 'react-map-gl';
 import { MapTooltipContent, Geocoder } from '../components';
 import { setMapLoaded, setSelectionData, appendSelectionData, removeSelectionData, openContextMenu } from '../actions';
 import { mapFn, dataFn, getVarId, getCSV, getCartogramCenter, getDataForCharts, getURLParams } from '../utils';
-import { colors, colorScales, MAPBOX_ACCESS_TOKEN } from '../config';
+import { colors, colorScales, dataPresets, MAPBOX_ACCESS_TOKEN } from '../config';
 import MAP_STYLE from '../config/style.json';
 import * as SVG from '../config/svg'; 
 
@@ -417,12 +417,10 @@ function MapSection(props){
     //     }
     //     return tempObj
     // };
-
     const cleanData = ( parameters ) => {
         const {numeratorData, denominatorData, bins, mapType, varID, vizType} = parameters; //dataName, dataType, params, colorScale
         if ((numeratorData === undefined) || (mapType !== 'lisa' && bins.breaks === undefined)) return [];
         var returnArray = [];
-        console.log(bins)
         let i = 0;
         switch(vizType) {
             // case 'cartogram':
@@ -444,14 +442,13 @@ function MapSection(props){
                 for (let i=0; i<geoids.length; i++) {
                     const tempGeoid = +geoids[i]
                     const value = dataFn(
-                        {data: numeratorData.data[geoids[i]], type: numeratorData.type},
-                        {data: denominatorData.data[geoids[i]], type: denominatorData.type},
+                        {data: numeratorData.data[tempGeoid], type: numeratorData.type},
+                        {data: denominatorData.data[tempGeoid], type: denominatorData.type},
                         dataParams
                     )
-                    
                     const tempColor = GetSimpleFillColor(value, tempGeoid, bins.breaks, mapType);
                     const tempHeight = GetHeight(value);
-                    const tempGeometry = find(storedGeojson[currentData].data.features, o => o.properties.GEOID === tempGeoid)
+                    const tempGeometry = find(storedGeojson[currentData].data.features, o => +o.properties.GEOID === tempGeoid)
                     
                     for (let n=0; n<tempGeometry?.geometry.coordinates.length; n++) {
                         returnArray.push({
@@ -463,7 +460,6 @@ function MapSection(props){
                     }
                 }
         }
-        console.log(returnArray)
         return returnArray
     }
 
@@ -531,22 +527,33 @@ function MapSection(props){
             return;
         }
         
+        // icon layers have own data, so just return the object
+        // otherwise, get data from StoredTabularData
         if (Object.keys(layer?.props).indexOf('getIcon')===-1) {
-            let hoverData = {};
+            // object to aggregate data for feature
+            let hoverData = {
+                GEOID: object.GEOID
+            };
+            // get current tables to filter for cases and deaths
+            const currentTables = dataPresets[currentData].tables ? Object.values(dataPresets[currentData].tables).map(table => table.csv) : []
+            // loop through tabulardata and get feature data
             for (const property in storedTabularData) {
-                if (!property.includes('geojson') || property === currentData) {
+                // if death or case data, only inlcude current dataset
+                if (property.includes('deaths') || property.includes('confirmed')) {
+                    if (currentTables.includes(property)) {
+                        hoverData[property] = storedTabularData[property]?.data[object?.GEOID]
+                        hoverData['dateIndices'] = storedTabularData[property].dateIndices
+                    }
+                // otherwise, include all tables that join
+                // except other base GEOJSON feature data
+                } else if (!property.includes('geojson') || property === currentData) {
                     hoverData[property] = storedTabularData[property]?.data[object?.GEOID]
                 }
             };
-            setHoverInfo(
-                {
-                    x, 
-                    y, 
-                    object: hoverData //layer.props?.hasOwnProperty('getIcon') ? object : 
-                }
-            )
+            setHoverInfo({ x, y, object: hoverData })
+        // if icon layer, just return object
         } else {
-            setHoverInfo(x, y, object)
+            setHoverInfo({ x, y, object })
         }
     }
 
@@ -673,6 +680,8 @@ function MapSection(props){
         }  
       }, []);
 
+    console.log(hoverInfo)
+
     const FullLayers = {
         choropleth: new PolygonLayer({
             id: 'choropleth',
@@ -718,7 +727,7 @@ function MapSection(props){
             id: 'hoverHighlightlayer',    
             data: currentMapData.data,
             getPolygon: d => d.geom,
-            getLineColor: d => hoverInfo?.object?.properties?.GEOID === d.GEOID ? [50, 50, 50] : [50, 50, 50, 0], 
+            getLineColor: d => hoverInfo.object?.GEOID === d.GEOID ? [50, 50, 50] : [50, 50, 50, 0], 
             getElevation: d => d.height,
             pickable: false,
             stroked: true,
@@ -1025,15 +1034,11 @@ function MapSection(props){
                     mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
                     // onViewportChange={() => hoverInfo.x !== null ? setHoverInfo({x:null, y:null, object:null}) : ''}
                     // onViewportChange={viewState  => console.log(mapRef.current.props.viewState)} 
-                    onLoad={() => {
-                        dispatch(setMapLoaded(true))
-                    }}
+                    onLoad={() => { dispatch(setMapLoaded(true))}}
                     >
                 </MapboxGLMap >
             </DeckGL>
-            <MapButtonContainer 
-                infoPanel={panelState.info}
-            >
+            <MapButtonContainer infoPanel={panelState.info}>
                 <NavInlineButtonGroup>
                     <NavInlineButton
                         title="Selection Box"

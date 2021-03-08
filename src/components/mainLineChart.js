@@ -189,8 +189,8 @@ const MainLineChart = () => {
     const chartData = useSelector(state => state.chartData);
     const dataParams = useSelector(state => state.dataParams);
     const currentVariable = useSelector(state => state.currentVariable);
-    const currentData = useSelector(state => state.currentData);
-    const dateIndices = useSelector(state => state.dateIndices);
+    const currentNumerator = useSelector(state => state.currentNumerator);
+    const storedTabularData = useSelector(state => state.storedTabularData);
     const selectionKeys = useSelector(state => state.selectionKeys);
 
     
@@ -205,10 +205,10 @@ const MainLineChart = () => {
 
     const chartSetDate = (e) => {
         if (e?.activeTooltipIndex !== undefined) {
-            if (dateIndices[currentData][dataParams.numerator].indexOf(e.activeTooltipIndex) !== -1) {
+            if (storedTabularData[currentNumerator].dateIndices.indexOf(e.activeTooltipIndex) !== -1) {
                 handleChange(e.activeTooltipIndex)
             } else {
-                handleChange(dateIndices[currentData][dataParams.numerator].reduce((a, b) => {return Math.abs(b - e.activeTooltipIndex) < Math.abs(a - e.activeTooltipIndex) ? b : a}))
+                handleChange(storedTabularData[currentNumerator].dateIndices.reduce((a, b) => {return Math.abs(b - e.activeTooltipIndex) < Math.abs(a - e.activeTooltipIndex) ? b : a}))
             }
         }
     }    
