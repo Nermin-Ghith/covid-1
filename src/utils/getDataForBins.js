@@ -8,14 +8,12 @@ const getDataForBins = (params) => {
     const tableKeys = Object.keys(numeratorData.data);
     const denominatorKeys = Object.keys(denominatorData.data)
     const combinedKeys = [...tableKeys, ...denominatorKeys].filter((value, index, self) => tableKeys.indexOf(value)!==-1 && denominatorKeys.indexOf(value)!==-1 && self.indexOf(value) === index)
-    const dateList = dateLists[numeratorData.dateList];
 
     // declare empty array for return variables
     let rtn = new Array(tableKeys.length).fill(0);
 
     // length of data table to loop through
     let n = combinedKeys.length;
-
     // this checks if the bins generated should be dynamic (generating for each date) or fixed (to the most recent date)
     if (nIndex === null && nProperty === null) {
         // if fixed, get the most recent date
@@ -28,8 +26,7 @@ const getDataForBins = (params) => {
             rtn[n] = dataFn(
                 {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
                 {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
-                {...dataParams, nIndex:tempIndex, dIndex: tempDIndex}, 
-                dateList
+                {...dataParams, nIndex:tempIndex, dIndex: tempDIndex}
             )||0
         }
     } else {
@@ -38,8 +35,7 @@ const getDataForBins = (params) => {
             rtn[n] = dataFn(
                 {data: numeratorData.data[combinedKeys[n]], type: numeratorData.type},
                 {data: denominatorData.data[combinedKeys[n]], type: denominatorData.type},
-                dataParams, 
-                dateList
+                dataParams
             )||0
         }
     }

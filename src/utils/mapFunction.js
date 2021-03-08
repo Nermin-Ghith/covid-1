@@ -1,5 +1,5 @@
 const mapFn = (val, bins, colors, maptype, column) => {
-  if (val === null) {
+  if (val === null || bins === undefined) {
     return null;
   } else if (maptype === "natural_breaks") {
     if (val === 0 || (val === -1 && column.includes('testing'))) return colors[0];

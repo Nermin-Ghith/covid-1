@@ -198,7 +198,7 @@ const DateSlider = () => {
 
     useEffect(() => {
         setDateIndices(storedTabularData[currentNumerator]?.dateIndices)
-    },[currentNumerator])
+    },[currentNumerator, storedTabularData[currentNumerator]])
     
     const handleChange = (event, newValue) => {
         if (dataParams.nType === "time-series" && dataParams.dType === "time-series") {

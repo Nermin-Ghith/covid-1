@@ -5,7 +5,7 @@ var reducer = (state = INITIAL_STATE, action) => {
         case 'DATA_LOAD':
             // main new data loading reducer
             // I: Destructure payload (load) object
-            let { tabularData, geoData, currentData, currentNumerator,
+            const { tabularData, geoData, currentData, currentNumerator,
                 currentDenominator, chartData, mapParams, 
                 variableParams} = action.payload.load;
 
@@ -244,7 +244,7 @@ var reducer = (state = INITIAL_STATE, action) => {
                 }
             }
         case 'SET_VARIABLE_PARAMS_AND_DATASET':
-            const { params, dataset, dataMapParams } = action.payload.params;
+            const { params, dataset, dataMapParams, variableCurrentNumerator, variableCurrentDenominator } = action.payload.params;
 
             let dataAndParamsObj = {
                 ...state.dataParams,
@@ -262,7 +262,9 @@ var reducer = (state = INITIAL_STATE, action) => {
                 mapParams: dataAndMapParamsObj,
                 selectionKeys: [],
                 selectionIndex: [],
-                currentData: dataset
+                currentData: dataset || state.currentData,
+                currentNumerator: variableCurrentNumerator || state.currentNumerator,
+                currentDenominator: variableCurrentDenominator || state.currentDenominator
             };
         case 'SET_Z_VARIABLE_PARAMS':
             let paramObjZ = {

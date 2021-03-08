@@ -3,7 +3,6 @@ import React from 'react';
 // The props passed to this component should contain an object of the hovered object (from deck, info.object by default)
 const MapTooltipContent = (props) => {
     // destructure the object for cleaner formatting
-
     const { properties, cases, deaths, // county data
         testing_tcap, testing_wk_pos, testing, vaccinesAdmin1, vaccinesAdmin2, vaccinesDist // state data
     } = props.content;
@@ -11,6 +10,7 @@ const MapTooltipContent = (props) => {
     let caseN = cases && props.index;
     let deathN = deaths && props.index;
     let testingN = testing && props.index;
+    console.log(props.content)
     // conditional returns for combination of information
     // this is not elegant but a bit more reliable than JSX conditional rendering
     if (properties && cases && deaths && testing && vaccinesAdmin1) { // State Feature

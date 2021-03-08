@@ -17,7 +17,7 @@ import styled from 'styled-components';
 import Tooltip from './tooltip';
 import { StyledDropDown, BinsContainer, Gutter } from '../styled_components';
 import { setVariableParams, setMapParams, setCurrentData, setPanelState, setParametersAndData } from '../actions'; //variableChangeZ, setNotification, storeMobilityData
-import { fixedScales, colorScales, colors, variableTree, variablePresets, urlParamsTree, datasetTree, allGeographies, allDatasets } from '../config';
+import { dataPresets, fixedScales, colorScales, colors, variableTree, variablePresets, urlParamsTree, datasetTree, allGeographies, allDatasets } from '../config';
 import * as SVG from '../config/svg';
 
 const VariablePanelContainer = styled.div`
@@ -221,7 +221,15 @@ const VariablePanel = (props) => {
 
   const dispatch = useDispatch();    
 
-  const { currentData,  dataParams, mapParams, panelState, urlParams } = useSelector(state => state); 
+  const { 
+    currentData,  
+    dataParams, 
+    mapParams, 
+    panelState, 
+    urlParams, 
+    currentNumerator, 
+    currentDenominator 
+  } = useSelector(state => state); 
   // currentVariable, currentZVariable, storedMobilityData
   // const [bivariateZ, setBivariateZ] = useState(false);
 
@@ -451,7 +459,7 @@ const VariablePanel = (props) => {
     let tempGeography = currentGeography + '';
     let tempDataset = currentDataset + '';
     let conditionalParameters = {};
-
+    
     if (variablePresets[e.target.value].nType === 'time-series' && dataParams.nType === 'time-series'){
       conditionalParameters['nRange'] = variablePresets[e.target.value].nRange !== null && dataParams.nRange !== null ? dataParams.nRange : variablePresets[e.target.value].nRange;
     } else if ((variablePresets[e.target.value].nType === 'time-series' && dataParams.nType !== 'time-series')||(variablePresets[e.target.value].nType !== 'time-series' && dataParams.nType === 'time-series')) {
@@ -468,14 +476,20 @@ const VariablePanel = (props) => {
       conditionalParameters['dIndex'] = dataParams.nIndex;
       conditionalParameters['nIndex'] = dataParams.nIndex;
     }
-    
+    console.log(currentNumerator)
     // check if valid combination based on variable tree
+    // if the current dataset and geography does not have the desired variable
+    // change the dataset, params, numerator, and denominator, and potentially geography
     if (!variableTree[e.target.value].hasOwnProperty(tempGeography) || !variableTree[e.target.value][tempGeography].hasOwnProperty(tempDataset)) {
       tempGeography = Object.keys(variableTree[e.target.value])[0]
       tempDataset = Object.keys(variableTree[e.target.value][tempGeography])[0];
-
       
+      // get the numerator and denominator for the new variable and datasets. These are CSV names
+      // dataPresets[datasetTree[tempGeography][tempDataset]]['tables'][variablePresets[e.target.value].numerator].csv
+      // | presets  |               new dataset              | tables |           numerator table name           | csv file name 
       dispatch(setParametersAndData({
+        variableCurrentNumerator: variablePresets[e.target.value].numerator === 'properties' ? datasetTree[tempGeography][tempDataset] : dataPresets[datasetTree[tempGeography][tempDataset]]['tables'][variablePresets[e.target.value].numerator].csv,
+        variableCurrentDenominator: variablePresets[e.target.value].denominator === 'properties' ? datasetTree[tempGeography][tempDataset] : dataPresets[datasetTree[tempGeography][tempDataset]]['tables'][variablePresets[e.target.value].denominator].csv,
         params: {
           ...variablePresets[e.target.value],
           ...conditionalParameters,
@@ -487,14 +501,18 @@ const VariablePanel = (props) => {
       }))
       setCurrentGeography(tempGeography)
       setCurrentDataset(tempDataset)
-    } else {
-      dispatch(setVariableParams({
-        ...variablePresets[e.target.value],
-        ...conditionalParameters,
+    // otherwise, just change the numerator, denominator, and params, keeping 
+    // the geography and dataset
+    } else {      
+      dispatch(setParametersAndData({
+        variableCurrentNumerator: variablePresets[e.target.value].numerator === 'properties' ? currentData : dataPresets[currentData]['tables'][variablePresets[e.target.value].numerator].csv,
+        variableCurrentDenominator: variablePresets[e.target.value].denominator === 'properties' ? currentData : dataPresets[currentData]['tables'][variablePresets[e.target.value].denominator].csv,
+        params: {
+          ...variablePresets[e.target.value],
+          ...conditionalParameters,
+        }
       }))
-
-    }
-    
+    }    
     setNewVariable(e.target.value)
   }
 

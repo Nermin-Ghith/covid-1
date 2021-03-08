@@ -1,5 +1,6 @@
 const getDataForCharts = (params) => {
     const { data, dataParams, dateLists } = params;
+    if (data === undefined) return [{}]
     // get list of all features (GEOIDs/FIPS)
     const features = Object.keys(data.data);
     const dateIndices = data.dateIndices;
@@ -37,18 +38,16 @@ const getDataForCharts = (params) => {
         } else {
             // loop through features and sum values for index
             let sum = 0;
-            let i = 0;
-            while (i<features.length) {
-                if (data.data[features[i]] !== undefined) sum += data.data[features[i]][dateList[n]]||0
-                i++;
+            for (let i=0; i<features.length; i++) {
+                if (data.data[features[i]] !== undefined) sum += data.data[features[i]][n]||0
             }
+            
             tempObj[sumCol] = sum
             tempObj.date = dateList[n]
-            if ((n < 7 && j === 7)||(n < 1 && j === 1)) {
-                tempObj[countCol] = sum
-            } else {
+            tempObj[countCol] = (n < 7 && j === 7)||(n < 1 && j === 1) ? 
+                sum : 
                 tempObj[countCol] = (sum - rtn[n/interval-j][sumCol])/(j)
-            }
+
             rtn[n/interval] = tempObj;
             n+=interval;
         }

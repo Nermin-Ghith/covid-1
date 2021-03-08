@@ -12,19 +12,31 @@ async function getParseCSV(params){
   const dateIndices = dateList !== undefined ? findDateIndices(dateList, Object.keys(data[0])) : null; 
 
   // if the CSV should be cumulative but is currently daily new, tag accumulate and this adds up days as it goes
-  if (accumulate) {
-    for(let n=0; n<data.length; n++){
-      for(let i=1; i<dateList.length; i++){
-        data[n][dateList[i]] = data[n][dateList[i]]+(data[n][dateList[i-1]]||0)
+  if (dateList) {
+    if (accumulate) {
+      for(let n=0; n<data.length; n++){
+        let tempArr = new Array(dateList.length)
+        for(let i=0; i<dateList.length; i++){
+          tempArr[i] = ((data[n][dateList[i]]||0)+(tempArr[i-1]||0))||null
+        }
+        rtn[data[n][joinColumn]] = tempArr
       }
-      rtn[data[n][joinColumn]] = data[n]
+      return {data: rtn, dateIndices}
+    } else {
+      for(let n=0; n<data.length; n++){
+        let tempArr = new Array(dateList.length)
+        for(let i=0; i<dateList.length; i++){
+          tempArr[i] = (data[n][dateList[i]]||tempArr[i-1])||null
+        }
+        rtn[data[n][joinColumn]] = tempArr
+      }
+      return {data: rtn, dateIndices}
     }
-    return {data: rtn, columns: Object.keys(data[0]), dateIndices}
   } else {
-    for(let n=0; n<data.length; n++){
+    for (let n=0; n<data.length; n++){
       rtn[data[n][joinColumn]] = data[n]
     }
-    return {data: rtn, columns: Object.keys(data[0]), dateIndices}
+    return {data: rtn}
   }
 }
 

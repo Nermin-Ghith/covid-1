@@ -286,27 +286,27 @@ export const dataPresets = {
             },
             predictions:{
                 csv: 'berkeley_predictions',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'fips'
             },
             chr_health_context:{
                 csv: 'chr_health_context',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             pct_home:{
                 csv: 'mobility_home_workdays_safegraph',
-                type: 'properties',
+                type: 'time-series',
                 joinColumn: 'county',
                 dateList: 'isoDateList'
             },
@@ -324,7 +324,7 @@ export const dataPresets = {
             },
             essential_workers:{
                 csv: 'context_essential_workers_acs',
-                type: 'time-series',
+                type: 'property',
                 joinColumn: 'fips'
             }
         }
@@ -349,22 +349,22 @@ export const dataPresets = {
             },
             predictions:{
                 csv: 'berkeley_predictions',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'fips'
             },
             chr_health_context:{
                 csv: 'chr_health_context',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             }
         }
@@ -387,27 +387,27 @@ export const dataPresets = {
             },
             predictions:{
                 csv: 'berkeley_predictions',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'fips'
             },
             chr_health_context:{
                 csv: 'chr_health_context',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             essential_workers:{
                 csv: 'context_essential_workers_acs',
-                type: 'time-series',
+                type: 'property',
                 joinColumn: 'fips'
             }
         }
@@ -432,17 +432,17 @@ export const dataPresets = {
             },
             chr_health_context:{
                 csv: 'chr_health_context_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             testing:{
@@ -508,17 +508,17 @@ export const dataPresets = {
             },
             chr_health_context:{
                 csv: 'chr_health_context_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             testing:{
@@ -584,17 +584,17 @@ export const dataPresets = {
             },
             chr_health_context:{
                 csv: 'chr_health_context_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors_state',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             testing:{
@@ -674,22 +674,22 @@ export const dataPresets = {
             },
             predictions:{
                 csv: 'berkeley_predictions',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'fips'
             },
             chr_health_context:{
                 csv: 'chr_health_context',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_life:{
                 csv: 'chr_life',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             chr_health_factors:{
                 csv: 'chr_health_factors',
-                type: 'properties',
+                type: 'property',
                 joinColumn: 'FIPS'
             },
             testing:{
@@ -719,7 +719,7 @@ export const dataPresets = {
             },
             essential_workers:{
                 csv: 'context_essential_workers_acs',
-                type: 'time-series',
+                type: 'property',
                 joinColumn: 'fips'
             }
         }
@@ -872,7 +872,7 @@ export const variablePresets = {
       variableName:"Uninsured Percent",
       numerator: 'chr_health_factors',
       nType: 'characteristic',
-      nProperty: 9,
+      nProperty: 'UnInPrc',
       nRange: null,
       denominator: 'properties',
       dType: null,
@@ -888,7 +888,7 @@ export const variablePresets = {
       variableName:"Over 65 Years Percent",
       numerator: 'chr_health_context',
       nType: 'characteristic',
-      nProperty: 3,
+      nProperty: 'Over65YearsPrc',
       nRange: null,
       denominator: 'properties',
       dType: null,
@@ -904,7 +904,7 @@ export const variablePresets = {
       variableName:"Life Expectancy",
       numerator: 'chr_life',
       nType: 'characteristic',
-      nProperty: 3,
+      nProperty: 'LfExpRt',
       nRange: null,
       denominator: 'properties',
       dType: null,
@@ -1064,7 +1064,7 @@ export const variablePresets = {
       variableName:"Forecasting (5-Day Severity Index)",
       numerator: 'predictions',
       nType: 'characteristic',
-      nProperty: 1,
+      nProperty: 'severity_index',
       nRange: null,
       denominator: 'properties',
       dType: null,
@@ -1080,7 +1080,7 @@ export const variablePresets = {
       variableName:"Percent Essential Workers",
       numerator: 'essential_workers',
       nType: 'characteristic',
-      nProperty: 1,
+      nProperty: 'pct_essential',
       nRange: null,
       denominator: 'properties',
       dType: null,

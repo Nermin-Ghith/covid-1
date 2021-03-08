@@ -166,7 +166,8 @@ function useForceUpdate(){
 
 function MapSection(props){ 
     // fetch pieces of state from store    
-    const { storedData, storedGeojson, currentData, storedLisaData, dateIndices,
+    const { storedTabularData, currentNumerator, currentDenominator,
+        storedGeojson, currentData, storedLisaData, dateIndices,
         storedCartogramData, panelState, dates, dataParams, mapParams,
         urlParams, } = useSelector(state => state);
 
@@ -380,32 +381,24 @@ function MapSection(props){
                 }
                 break;
             default:
-                if (storedData[currentData] !== undefined) {
-                    setCurrentMapData(prev => ({
+                if (storedTabularData[currentData] !== undefined) {
+                    setCurrentMapData({
                         params: getVarId(currentData, dataParams),
                         data: cleanData({
-                            data: storedData[currentData],
+                            numeratorData: storedTabularData[currentNumerator],
+                            denominatorData: storedTabularData[currentDenominator],
                             bins: {bins: mapParams.bins.bins, breaks:mapParams.bins.breaks}, 
                             mapType: mapParams.mapType, 
                             vizType: mapParams.vizType
                         })
-                    }))
+                    })
                 }
         }
-    },[mapParams.mapType, mapParams.vizType, mapParams.bins.bins, mapParams.bins.breaks, mapParams.binMode, mapParams.fixedScale, mapParams.vizType, mapParams.colorScale, mapParams.customScale, dataParams.nIndex, dataParams.nRange, storedLisaData, storedGeojson[currentData], storedCartogramData, currentData])
+    },[currentNumerator, currentDenominator, storedTabularData, mapParams.mapType, mapParams.vizType, mapParams.bins.bins, mapParams.bins.breaks, mapParams.binMode, mapParams.fixedScale, mapParams.vizType, mapParams.colorScale, mapParams.customScale, dataParams.nIndex, dataParams.nRange, storedLisaData, storedGeojson[currentData], storedCartogramData, currentData])
     
     useEffect(() => {
         forceUpdate()
     }, [currentMapData.params])
-    const GetFillColor = (f, bins, mapType, varID) => {
-        if ((!bins.hasOwnProperty("bins")) || (!f.hasOwnProperty(dataParams.numerator))) {
-            return [240,240,240,120]
-        } else if (mapType === 'lisa') {
-            return colorScales.lisa[storedLisaData[storedGeojson[currentData]['geoidOrder'][f.properties.GEOID]]]
-        } else {
-            return mapFn(dataFn(f[dataParams.numerator], f[dataParams.denominator], dataParams), bins.breaks, mapParams.colorScale, mapParams.mapType, dataParams.numerator);
-        }
-    }
 
     const GetSimpleFillColor = (value, geoid, bins, mapType) => {
         if (value===null) {
@@ -426,44 +419,55 @@ function MapSection(props){
     // };
 
     const cleanData = ( parameters ) => {
-        const {data, bins, mapType, varID, vizType} = parameters; //dataName, dataType, params, colorScale
-        if ((data === undefined) || (mapType !== 'lisa' && bins.breaks === undefined)) return [];
+        const {numeratorData, denominatorData, bins, mapType, varID, vizType} = parameters; //dataName, dataType, params, colorScale
+        if ((numeratorData === undefined) || (mapType !== 'lisa' && bins.breaks === undefined)) return [];
         var returnArray = [];
+        console.log(bins)
         let i = 0;
         switch(vizType) {
-            case 'cartogram':
-                if (storedGeojson[currentData] === undefined) break;
-                while (i < data.length) {
-                    const tempGeoid = storedGeojson[currentData]['indexOrder'][data[i].properties?.id]
-                    const tempColor = GetSimpleFillColor(data[i].value, tempGeoid, bins.breaks, mapType);
-                    returnArray.push({
-                        GEOID: tempGeoid,
-                        position: data[i].position,
-                        color: tempColor,
-                        radius: data[i].radius
-                    })
-                    i++;
-                }
-                break
+            // case 'cartogram':
+            //     if (storedGeojson[currentData] === undefined) break;
+            //     while (i < numeratorData.length) {
+            //         const tempGeoid = storedGeojson[currentData]['indexOrder'][numeratorData[i].properties?.id]
+            //         const tempColor = GetSimpleFillColor(numerator[i].value, tempGeoid, bins.breaks, mapType);
+            //         returnArray.push({
+            //             GEOID: tempGeoid,
+            //             position: numerator[i].position,
+            //             color: tempColor,
+            //             radius: numerator[i].radius
+            //         })
+            //         i++;
+            //     }
+            //     break
             default:
-                while (i < data.length) {
-                    let tempColor = GetFillColor(data[i], bins, mapType, varID);
-                    let tempHeight = GetHeight(data[i]);
-                    for (let n=0; n<data[i].geometry.coordinates.length; n++) {
+                const geoids = Object.keys(numeratorData.data)
+                for (let i=0; i<geoids.length; i++) {
+                    const tempGeoid = +geoids[i]
+                    const value = dataFn(
+                        {data: numeratorData.data[geoids[i]], type: numeratorData.type},
+                        {data: denominatorData.data[geoids[i]], type: denominatorData.type},
+                        dataParams
+                    )
+                    
+                    const tempColor = GetSimpleFillColor(value, tempGeoid, bins.breaks, mapType);
+                    const tempHeight = GetHeight(value);
+                    const tempGeometry = find(storedGeojson[currentData].data.features, o => o.properties.GEOID === tempGeoid)
+                    
+                    for (let n=0; n<tempGeometry?.geometry.coordinates.length; n++) {
                         returnArray.push({
-                            GEOID: data[i].properties.GEOID,
-                            geom: data[i].geometry.coordinates[n],
+                            GEOID: tempGeoid,
+                            geom: tempGeometry?.geometry.coordinates[n],
                             color: tempColor,
                             height: tempHeight
                         })
                     }
-                    i++;
                 }
         }
+        console.log(returnArray)
         return returnArray
     }
 
-    const GetHeight = (f) => dataFn(f[dataParams.numerator], f[dataParams.denominator], dataParams)*(dataParams.scale3D/((dataParams.nType === "time-series" && dataParams.nRange === null) ? (dataParams.nIndex)/10 : 1))
+    const GetHeight = (value) => value*(dataParams.scale3D/((dataParams.nType === "time-series" && dataParams.nRange === null) ? (dataParams.nIndex)/10 : 1))
 
     const GetMapView = () => {
         try {
@@ -522,18 +526,33 @@ function MapSection(props){
     }
 
     const handleMapHover = ({x, y, object, layer}) => {
-        setHoverInfo(
-            {
-                x, 
-                y, 
-                object: Object.keys(layer?.props).indexOf('getIcon')!==-1 ? object : find(storedData[currentData],o => o.properties.GEOID === object?.GEOID) //layer.props?.hasOwnProperty('getIcon') ? object : 
-            }
-        )
+        if (object === undefined) {
+            setHoverInfo({x:null, y:null, object:null}); 
+            return;
+        }
+        
+        if (Object.keys(layer?.props).indexOf('getIcon')===-1) {
+            let hoverData = {};
+            for (const property in storedTabularData) {
+                if (!property.includes('geojson') || property === currentData) {
+                    hoverData[property] = storedTabularData[property]?.data[object?.GEOID]
+                }
+            };
+            setHoverInfo(
+                {
+                    x, 
+                    y, 
+                    object: hoverData //layer.props?.hasOwnProperty('getIcon') ? object : 
+                }
+            )
+        } else {
+            setHoverInfo(x, y, object)
+        }
     }
 
     const handleMapClick = (info, e) => {
         if (e.rightButton) return;
-        let tempData = storedData[currentData][storedData[currentData].findIndex(o => o.properties.GEOID === info.object?.GEOID)]        
+        let tempData = storedTabularData[currentData][storedTabularData[currentData].findIndex(o => o.properties.GEOID === info.object?.GEOID)]        
         const dataName = tempData.properties.hasOwnProperty('state_abbr') ? `${tempData.properties.NAME}, ${tempData.properties.state_abbr}` : `${tempData.properties.NAME}`
         
         if (multipleSelect) {
@@ -551,7 +570,7 @@ function MapSection(props){
                                 dataName
                             ),
                             name: dataName,
-                            index: findIndex(storedData[currentData], o => o.properties.GEOID === info.object?.GEOID)
+                            index: findIndex(storedTabularData[currentData], o => o.properties.GEOID === info.object?.GEOID)
                         })
                     );
                     window.localStorage.setItem('SHARED_GEOID', GeoidList);
@@ -565,7 +584,7 @@ function MapSection(props){
                         dispatch(
                             removeSelectionData({
                                 name: dataName,
-                                index: findIndex(storedData[currentData], o => o.properties.GEOID === info.object?.GEOID)
+                                index: findIndex(storedTabularData[currentData], o => o.properties.GEOID === info.object?.GEOID)
                             })
                         )
                         window.localStorage.setItem('SHARED_GEOID', tempArray);
@@ -586,7 +605,7 @@ function MapSection(props){
                             dataName
                         ),
                         name: dataName,
-                        index: findIndex(storedData[currentData], o => o.properties.GEOID === info.object?.GEOID)
+                        index: findIndex(storedTabularData[currentData], o => o.properties.GEOID === info.object?.GEOID)
                     })
                 );
                 window.localStorage.setItem('SHARED_GEOID', info.object?.GEOID);
@@ -793,7 +812,7 @@ function MapSection(props){
             getAlignmentBaseline: 'center',
             maxWidth: 500,
             wordBreak: 'break-word',
-            getText: f => find(storedData[currentData], o => o.properties.GEOID === f.GEOID)?.properties?.NAME,
+            getText: f => find(storedTabularData[currentData], o => o.properties.GEOID === f.GEOID)?.properties?.NAME,
             updateTriggers: {
                 getPosition: [storedCartogramData, mapParams.vizType],
                 getFillColor: [storedCartogramData, mapParams.vizType],
@@ -912,7 +931,7 @@ function MapSection(props){
                 for (let i=0; i<features.length; i++) {
                     if (GeoidList.indexOf(features[i].object?.GEOID) !== -1) continue
                     const tempGEOID = features[i].object?.GEOID
-                    const tempData = storedData[currentData][storedData[currentData].findIndex(o => o.properties.GEOID === tempGEOID)]        
+                    const tempData = storedTabularData[currentData][storedTabularData[currentData].findIndex(o => o.properties.GEOID === tempGEOID)]        
                     const dataName = tempData.properties.hasOwnProperty('state_abbr') ? `${tempData.properties.NAME}, ${tempData.properties.state_abbr}` : `${tempData.properties.NAME}`
                     GeoidList.push(tempGEOID)                    
                     
@@ -927,7 +946,7 @@ function MapSection(props){
                                     dataName
                                 ),
                                 name: dataName,
-                                index: findIndex(storedData[currentData], o => o.properties.GEOID === tempGEOID)
+                                index: findIndex(storedTabularData[currentData], o => o.properties.GEOID === tempGEOID)
                             })
                         );
                     } else {
@@ -941,7 +960,7 @@ function MapSection(props){
                                     dataName
                                 ),
                                 name: dataName,
-                                index: findIndex(storedData[currentData], o => o.properties.GEOID === tempGEOID)
+                                index: findIndex(storedTabularData[currentData], o => o.properties.GEOID === tempGEOID)
                             })
                         );
                     }

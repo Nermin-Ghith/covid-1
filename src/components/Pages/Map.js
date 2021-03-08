@@ -101,13 +101,12 @@ function App() {
       ...csvData,
       [geojson]: {
         'type':'property',
-        'data': geoData.data.features.map(f => f.properties).reduce((map, obj) => { map[obj.GEOID] = obj; return map; }, {})
+        'data': geoData.data.features.map(f => f.properties).reduce((map, obj) => { map[parseInt(obj.GEOID)] = obj; return map; }, {})
       }
     } 
-    
     // extract metadata and chart data
-    const lastIndex = csvData[currentNumerator] ? csvData[currentNumerator].dateIndices.slice(-1)[0] : null;
-    const chartData = getDataForCharts({data: tabularData[currentNumerator], dataParams, dateLists});
+    const lastIndex = csvData[currentNumerator].dateIndices ? csvData[currentNumerator].dateIndices.slice(-1)[0] : null;
+    const chartData = getDataForCharts({data: tabularData[dataPresets[currentData]['tables']['cases'].csv], dataParams, dateLists});
     const binData = getDataForBins({
       numeratorData: tabularData[currentNumerator], 
       denominatorData: tabularData[currentDenominator], 
@@ -266,13 +265,14 @@ function App() {
         dataPresets[currentData],
         gda_proxy
       )
-    } else if (storedTabularData[currentNumerator] === undefined) {
+    } else if (storedTabularData[currentData] === undefined) {
       loadData(
         dataPresets[currentData],
         gda_proxy
       )
-    } else if (storedTabularData[currentNumerator] !== undefined) {
-      const lastIndex = storedTabularData[currentNumerator]['dateIndices'].slice(-1)[0]
+    } else if (storedTabularData[currentData] !== undefined) {
+      const lastIndex = storedTabularData[currentNumerator]['dateIndices'] ? storedTabularData[currentNumerator]['dateIndices'].slice(-1)[0] : null;
+
       dispatch(
         dataLoadExisting({
           variableParams: {
@@ -281,7 +281,7 @@ function App() {
             dRange: dataParams.dType === 'time-series' ? dataParams.nRange : dataParams.dRange,
             binIndex: lastIndex || dataParams.nIndex,
           },
-          chartData: getDataForCharts({data: storedTabularData[currentNumerator], dataParams, dateLists})
+          chartData: getDataForCharts({data: storedTabularData[dataPresets[currentData]['tables']['cases'].csv], dataParams, dateLists})
         })
       )
       updateBins({
@@ -389,7 +389,7 @@ function App() {
         <button onClick={() => console.log(fullState)}>Log state</button>
       </header>
       <div id="mainContainer" className={isLoading ? 'loading' : ''}>
-        {/* <MapSection /> */}
+        <MapSection />
         <TopPanel />
         <Legend 
           variableName={dataParams.variableName} 
