@@ -1,14 +1,44 @@
+# %%
 import pyarrow as pa
 import pandas as pd 
+from pyarrow import feather
+import pyarrow.parquet as pq
+import dask.dataframe as dd
+# %%
+df = pd.read_csv('../../public/csv/covid_testing_cdc.csv')
+print(df.dtypes)
+# %%
 
-df = pd.read_parquet('your_file.parquet')
-
-schema = pa.Schema.from_pandas(df, preserve_index=False)
-table = pa.Table.from_pandas(df, preserve_index=False)
-
-sink = "myfile.arrow"
+schema = pa.Schema.from_pandas(df)
+table = pa.Table.from_pandas(df)
+table
+# %%
 
 # Note new_file creates a RecordBatchFileWriter 
-writer = pa.ipc.new_file(sink, schema)
-writer.write(table)
+writer = pa.RecordBatchFileWriter('test.arrow', schema)
+writer.write_table(table)
 writer.close()
+
+# %%
+# write arrow table to a single parquet file, just to test it
+pq.write_table(table, 'test.parq')
+# %%
+ddf = dd.read_parquet('test.parq', index='fips_code')
+# %%
+ddf
+# %%
+print('{:,} total records in {} partitions'.format(len(ddf), ddf.npartitions))
+print('DataFrame size: {:,}'.format(ddf.size.compute()))
+ddf
+# %%
+
+# read parquet file with arrow
+table = pq.read_table('test.parq')
+# %%
+table.to_pandas()
+# %%
+writer = pa.RecordBatchFileWriter('test2.arrow', table.schema)
+writer.write_table(table)
+writer.close()
+
+# %%
