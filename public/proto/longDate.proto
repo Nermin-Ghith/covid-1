@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message Row {
+    int64 geoid = 1;
+    string date = 2;
+    float value = 3;
+}
+
+message Rows {
+    repeated Row row = 1;
+}

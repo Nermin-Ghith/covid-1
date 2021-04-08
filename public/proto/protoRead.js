@@ -1,17 +1,16 @@
 var Pbf = require('pbf');
-var Dots = require('./dotDensity.js').Dots;
+var Rows = require('./flatData.js').Rows;
 var axios = require('axios');
 
-axios.get("http://localhost:8080/dotsBinary.pbf",
+axios.get("http://localhost:8080/test3.pbf",
         {
             responseType: 'arraybuffer'
         })
         .then((response) => {
-            
+            var t0 = Date.now()
             var pbf = new Pbf(response.data);
-            var obj = Dots.read(pbf);
-
-            console.log(obj)
+            var obj = Rows.read(pbf);
+            console.log(Date.now() - t0);
         })
         .catch((error) => console.log(error));
 // // read
