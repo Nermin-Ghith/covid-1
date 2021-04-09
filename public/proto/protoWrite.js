@@ -11,13 +11,13 @@ async function getData(){
     for (let i = 0; i < features.length; i++){
         const currentDot = new Schema.Dot()
         currentDot.setRacecode(features[i].properties.race_code)
-        currentDot.setLatitude(features[i].properties.latitude)
-        currentDot.setLongitude(features[i].properties.longitude)
+        currentDot.setLatitude(Math.round(features[i].properties.latitude*10e5))
+        currentDot.setLongitude(Math.round(features[i].properties.longitude*10e5))
         dots.addDots(currentDot)
     }
 
     const bytes =  dots.serializeBinary()
-    fs.writeFileSync("dotsBinary3", bytes)
+    fs.writeFileSync("dotsBinary4", bytes)
 }
 
 getData()

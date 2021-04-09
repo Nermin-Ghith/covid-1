@@ -92,8 +92,8 @@ proto.Dot.prototype.toObject = function(opt_includeInstance) {
 proto.Dot.toObject = function(includeInstance, msg) {
   var f, obj = {
     racecode: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    latitude: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    longitude: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0)
+    latitude: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    longitude: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -135,11 +135,11 @@ proto.Dot.deserializeBinaryFromReader = function(msg, reader) {
       msg.setRacecode(value);
       break;
     case 2:
-      var value = /** @type {number} */ (reader.readFloat());
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setLatitude(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readFloat());
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setLongitude(value);
       break;
     default:
@@ -179,15 +179,15 @@ proto.Dot.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getLatitude();
-  if (f !== 0.0) {
-    writer.writeFloat(
+  if (f !== 0) {
+    writer.writeInt32(
       2,
       f
     );
   }
   f = message.getLongitude();
-  if (f !== 0.0) {
-    writer.writeFloat(
+  if (f !== 0) {
+    writer.writeInt32(
       3,
       f
     );
@@ -214,11 +214,11 @@ proto.Dot.prototype.setRacecode = function(value) {
 
 
 /**
- * optional float latitude = 2;
+ * optional int32 latitude = 2;
  * @return {number}
  */
 proto.Dot.prototype.getLatitude = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 2, 0.0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
@@ -227,16 +227,16 @@ proto.Dot.prototype.getLatitude = function() {
  * @return {!proto.Dot} returns this
  */
 proto.Dot.prototype.setLatitude = function(value) {
-  return jspb.Message.setProto3FloatField(this, 2, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional float longitude = 3;
+ * optional int32 longitude = 3;
  * @return {number}
  */
 proto.Dot.prototype.getLongitude = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 3, 0.0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
@@ -245,7 +245,7 @@ proto.Dot.prototype.getLongitude = function() {
  * @return {!proto.Dot} returns this
  */
 proto.Dot.prototype.setLongitude = function(value) {
-  return jspb.Message.setProto3FloatField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 

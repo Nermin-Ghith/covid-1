@@ -2,8 +2,8 @@ syntax = "proto3";
 
 message Dot {
     int32 raceCode = 1;
-    float latitude = 2;
-    float longitude = 3;
+    int32 latitude = 2;
+    int32 longitude = 3;
 }
 
 message Dots {

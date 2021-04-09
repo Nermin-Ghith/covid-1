@@ -59,6 +59,7 @@ with open(f'dateSchema.proto', 'w') as outfile:
 # %%
 # Generate Python Schema
 os.system(f'protoc -I=. --python_out=. longDate.proto')
+# protoc --js_out=import_style=commonjs,binary:. myFile.proto
 # Generate JS Schema
 os.system(f'node pbf/bin/pbf longDate.proto > longDate.js')
 
